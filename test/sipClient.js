@@ -1,0 +1,50 @@
+const { expect } = require('chai');
+
+const co = require('co');
+const sipClient = require('../sipClient');
+const config = require('../lib/config');
+
+describe('sip Client Functions', function test() {
+  this.timeout(10000);
+  // todo make a long lived one or figure how todo dynamically..
+  const event = { event: 'scoperequest:data-received', type: 'code', response: 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjg2MTRhYS0yNWJhLTQxNzctYTE5OC0wODFjNTNjOWJiOWIiLCJpYXQiOjE1MDI0NjAwMjQuNDgyLCJleHAiOjE1MDI0NjE4MjQuNDgyLCJpc3MiOiJjaXZpYy1zaXAtaG9zdGVkLXNlcnZpY2UiLCJhdWQiOiJodHRwczovL2FwaS5jaXZpYy5jb20vc2lwLyIsInN1YiI6ImJiYjEyMyIsImRhdGEiOnsiY29kZVRva2VuIjoiMzMwOWIzNGEtOGE5Zi00MTcxLThkOGMtMjA3MzZjNjYxYmMwIn19.8xcT8ZVc4Rh3xcjB1iRNj0hHFPw_K2s1cwTz8BeFzYTZ1OoFpXGvEP4zWTckFPUTcn1e3YhRtzbjf7g1qRKn3A' };
+  const userData = { data: [{ label: 'contact.personal.email', value: 'stewart@civic.com', isValid: true, isOwner: true }, { label: 'contact.personal.phoneNumber', value: '+44 111222333', isValid: true, isOwner: true }], userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650' };
+
+  it.skip('exchangeCode', (done) => {
+    co(function* coWrapper() {
+      const configIn = {
+        appId: config.appPartner.appId,
+        appSecret: config.appPartner.appSecret,
+        prvKey: config.appPartner.prvKey,
+        env: config.env,
+        api: config.api,
+      };
+      const data = yield sipClient.test.exchangeCode(configIn, event.response);
+      // console.log(userData);
+      expect(data).to.beTruthy('Auth Failed');
+    })
+      .then(done)
+      .catch((err) => {
+        // console.log(err);
+        done(err);
+      });
+  });
+
+  it('extract email address from userData received from authToken', () => {
+    const email = sipClient.getEmailFromAuthCode(userData);
+    expect(email.value).to.equal('stewart@civic.com', 'can not get valid email from userData');
+
+    expect(sipClient.getEmailFromAuthCode({ data: [{ label: 'some random', value: 'value' }] })).to.equal(undefined, 'no valid items in array returns undefined');
+    expect(sipClient.getEmailFromAuthCode({ data: 'dfdfdf' })).to.equal(undefined, 'no array returns undefined');
+    expect(sipClient.getEmailFromAuthCode({})).to.equal(undefined, 'empty object returns undefined');
+    expect(sipClient.getEmailFromAuthCode(undefined)).to.equal(undefined, 'undefined returns undefined');
+  });
+
+  it('extract userId from userData received from authToken', () => {
+    const userId = sipClient.getUserIdFromAuthCode(userData);
+    expect(userId).to.equal('2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650', 'can not get valid userId from userData');
+
+    expect(sipClient.getUserIdFromAuthCode({})).to.equal(undefined, 'empty object returns undefined');
+    expect(sipClient.getUserIdFromAuthCode(undefined)).to.equal(undefined, 'undefined returns undefined');
+  });
+});
