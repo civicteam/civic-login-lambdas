@@ -172,6 +172,6 @@ module.exports = (logger, config, authCallback) => {
     login,
     keepAlive,
     sessionAuthorizer,
-    sipClient
+    sipClient,
   };
 };
