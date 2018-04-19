@@ -5,13 +5,7 @@ const handler = require('../src/index');
 
 const co = require('co');
 const jwt = require('../src/jwt');
-// const partner = require('../lib/partner');
-// const userPartner = require('../lib/db/userPartner');
-// const appPartner = require('../lib/appPartner');
-// const keys = require('../lib/keys');
 // const hostedServices = require('../lib/HostedServices').hostedServices;
-// const keys = require('../lib/keys');
-// const scopeRequest = require('../lib/scopeRequest');
 
 const authCode = uuidV4();
 const appId = 'HkEQPA4YZ';
