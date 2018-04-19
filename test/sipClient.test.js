@@ -3,11 +3,27 @@ const { expect } = require('chai');
 const co = require('co');
 const sipClient = require('../src/sipClient');
 
+const config = {
+  appPartner: {
+
+  },
+  env: '',
+  api: '',
+};
+
 describe('sip Client Functions', function test() {
   this.timeout(10000);
   // todo make a long lived one or figure how todo dynamically..
   const event = { event: 'scoperequest:data-received', type: 'code', response: 'eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzNjg2MTRhYS0yNWJhLTQxNzctYTE5OC0wODFjNTNjOWJiOWIiLCJpYXQiOjE1MDI0NjAwMjQuNDgyLCJleHAiOjE1MDI0NjE4MjQuNDgyLCJpc3MiOiJjaXZpYy1zaXAtaG9zdGVkLXNlcnZpY2UiLCJhdWQiOiJodHRwczovL2FwaS5jaXZpYy5jb20vc2lwLyIsInN1YiI6ImJiYjEyMyIsImRhdGEiOnsiY29kZVRva2VuIjoiMzMwOWIzNGEtOGE5Zi00MTcxLThkOGMtMjA3MzZjNjYxYmMwIn19.8xcT8ZVc4Rh3xcjB1iRNj0hHFPw_K2s1cwTz8BeFzYTZ1OoFpXGvEP4zWTckFPUTcn1e3YhRtzbjf7g1qRKn3A' };
-  const userData = { data: [{ label: 'contact.personal.email', value: 'stewart@civic.com', isValid: true, isOwner: true }, { label: 'contact.personal.phoneNumber', value: '+44 111222333', isValid: true, isOwner: true }], userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650' };
+  const userData = {
+    data: [{
+      label: 'contact.personal.email', value: 'stewart@civic.com', isValid: true, isOwner: true,
+    },
+    {
+      label: 'contact.personal.phoneNumber', value: '+44 111222333', isValid: true, isOwner: true,
+    }],
+    userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650',
+  };
 
   it.skip('exchangeCode', (done) => {
     co(function* coWrapper() {

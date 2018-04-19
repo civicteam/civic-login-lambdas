@@ -24,7 +24,14 @@
     "mocha": "^5.1.1",
     "nyc": "^11.7.1",
     "chai": "^4.1.2",
-    "cross-env": "^5.1.4"
+    "cross-env": "^5.1.4",
+    "crypto-js": "latest",
+    "json-stable-stringify": "latest",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-babel": "^5.0.0",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3"
   },
   "nyc": {
     "lines": 75,
@@ -34,5 +41,31 @@
     "exclude": [
       "test/*"
     ]
+  },
+  "eslintConfig": {
+    "extends": "airbnb-base",
+    "env": {
+      "mocha": true,
+      "node": true,
+      "browser": true
+    },
+    "rules": {
+      "max-len": [
+        "warn",
+        200
+      ],
+      "import/no-extraneous-dependencies": [
+        "error",
+        {
+          "devDependencies": [
+            "**/test/*.js"
+          ]
+        }
+      ],
+      "no-plusplus": "warn",
+      "consistent-return": 1,
+      "no-param-reassign": 0,
+      "one-var": 0
+    }
   }
 }

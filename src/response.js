@@ -34,7 +34,7 @@ module.exports = (logger) => {
     callback(null, response);
   };
 
-  const static = (callback, data, statusCode, contentType = 'text/html') => {
+  const static = (callback, data, statusCode, contentType = 'text/html') => { 
     const response = {
       statusCode,
       headers: {
