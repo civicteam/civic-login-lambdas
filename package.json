@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "test": "cross-env NODE_ENV=test nyc --reporter=none mocha",
-    "coverage": "cross-env FORCE_COLOR=1 nyc report && nyc check-coverage"
+    "coverage": "cross-env FORCE_COLOR=1 nyc report && nyc check-coverage",
+    "lint": "eslint --max-warnings=0 .",
+    "lint-autofix": "eslint --fix ."
   },
   "author": "Daniel Kelleher",
   "license": "ISC",
