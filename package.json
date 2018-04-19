@@ -4,19 +4,35 @@
   "description": "Integrate civic login in serverless applications",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cross-env NODE_ENV=test nyc --reporter=none mocha",
+    "coverage": "cross-env FORCE_COLOR=1 nyc report && nyc check-coverage"
   },
   "author": "Daniel Kelleher",
   "license": "ISC",
   "dependencies": {
-    "co": "^4.6.0",
-    "lodash": "^4.17.5",
     "civic-sip-api": "civicteam/npm-civic-sip-api.git",
-    "jsrsasign": "latest",
-    "uuid": "latest",
-    "jwt-js": "latest",
-    "unix-timestamp": "latest",
+    "co": "^4.6.0",
     "crypto-js": "latest",
-    "json-stable-stringify": "latest"
+    "json-stable-stringify": "latest",
+    "jsrsasign": "latest",
+    "jwt-js": "latest",
+    "lodash": "^4.17.5",
+    "unix-timestamp": "latest",
+    "uuid": "latest"
+  },
+  "devDependencies": {
+    "mocha": "^5.1.1",
+    "nyc": "^11.7.1",
+    "chai": "^4.1.2",
+    "cross-env": "^5.1.4"
+  },
+  "nyc": {
+    "lines": 75,
+    "statements": 75,
+    "functions": 75,
+    "branches": 75,
+    "exclude": [
+      "test/*"
+    ]
   }
 }
