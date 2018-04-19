@@ -5,7 +5,7 @@ process.env.STAGE = 'dev';
 process.env.IS_OFFLINE = true;
 
 const { assert } = require('chai');
-const sessionToken = require('../sessionToken');
+const sessionToken = require('../src/sessionToken');
 
 describe('SessionToken Functions', function test() {
   this.timeout(10000);

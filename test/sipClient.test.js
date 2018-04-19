@@ -1,8 +1,7 @@
 const { expect } = require('chai');
 
 const co = require('co');
-const sipClient = require('../sipClient');
-const config = require('../lib/config');
+const sipClient = require('../src/sipClient');
 
 describe('sip Client Functions', function test() {
   this.timeout(10000);
