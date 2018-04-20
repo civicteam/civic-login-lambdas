@@ -5,7 +5,6 @@ const JWT_EXPIRATION = '10m'; // 10 minutes
 const JWT_GRACE_PERIOD = 60; // 1 minutes
 
 module.exports = (sessionConfig) => {
-
   const create = (userId, expiration = JWT_EXPIRATION) => {
     const payload = {
       sessionId: uuidV4(),
@@ -67,4 +66,4 @@ module.exports = (sessionConfig) => {
       verify,
     },
   };
-}
+};

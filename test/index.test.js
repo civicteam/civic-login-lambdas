@@ -20,13 +20,20 @@ const authResponse = jwt.createToken(
   appId,
   '10m',
   payload,
-  'hostedServices.SIPHostedService.hexprv');
+  'hostedServices.SIPHostedService.hexprv',
+);
 
 const event = {
   event: 'scoperequest:data-received',
   type: 'code',
   response: authResponse,
 };
+
+const scopeRequest = {};
+const userPartner = {};
+const partner = {};
+const appPartner = {};
+const keys = {};
 
 const validScopeRequest = {
   authCode,
@@ -347,7 +354,7 @@ describe('Partner Handler Functions', function test() {
       expect(app.statusCode).to.equal(200);
       expect(JSON.parse(app.body)).to.be.an('object');
       expect(JSON.parse(app.body).name).to.equal('test app');
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
       const appUpdated = yield new Promise((resolve) => {
         handler.appUpdate({
           headers: {
@@ -447,7 +454,7 @@ describe('Partner Handler Functions', function test() {
       });
       // console.log(app);
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
       const encrypted = keys.encryptForPartner('secret');
       const appUpdated = yield new Promise((resolve) => {
         handler.appAddKey({
@@ -571,7 +578,7 @@ describe('Partner Handler Functions', function test() {
       });
       // console.log(app);
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
       const encrypted = keys.encryptForPartner('secret');
       const appUpdated = yield new Promise((resolve) => {
         handler.appAddKey({
@@ -672,7 +679,7 @@ describe('Partner Handler Functions', function test() {
       });
       // console.log(app);
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
       const appPromoteRequest = yield new Promise((resolve) => {
         handler.appPromoteRequest({
           headers: {
@@ -767,7 +774,7 @@ describe('Partner Handler Functions', function test() {
       });
       // console.log(app);
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
       const appDelete = yield new Promise((resolve) => {
         handler.appDelete({
           headers: {
@@ -814,7 +821,7 @@ describe('Partner Handler Functions', function test() {
         });
       });
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
 
       const appPromoteRequest = yield new Promise((resolve) => {
         handler.appPromoteRequest({
@@ -902,7 +909,7 @@ describe('Partner Handler Functions', function test() {
         });
       });
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
 
       const appPromoteRequest = yield new Promise((resolve) => {
         handler.appPromoteRequest({
@@ -1011,7 +1018,7 @@ describe('Partner Handler Functions', function test() {
         });
       });
       expect(app.statusCode).to.equal(200);
-      const applicationId = JSON.parse(app.body).applicationId;
+      const { applicationId } = JSON.parse(app.body);
       const appSuspend = yield new Promise((resolve) => {
         handler.appSuspend({
           headers: {
@@ -1052,7 +1059,8 @@ describe('Partner Handler Functions', function test() {
           {},
           (err, response) => {
             resolve(response);
-          });
+          },
+        );
       });
       // console.log(users);
       expect(JSON.parse(users.body)).to.be.an('array');
@@ -1086,7 +1094,7 @@ describe('Partner Handler Functions', function test() {
       expect(JSON.parse(newUser.body).email).to.equal('savio+unittest1@civic.com');
       expect(JSON.parse(newUser.body).role).to.equal('ADMIN');
 
-      const userId = JSON.parse(newUser.body).userId;
+      const { userId } = JSON.parse(newUser.body);
 
       const userUpdated = yield new Promise((resolve) => {
         handler.teamUsersUpdate({

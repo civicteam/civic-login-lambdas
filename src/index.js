@@ -1,5 +1,5 @@
 const co = require('co');
-const _ = require('lodash');
+// const _ = require('lodash');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
@@ -56,13 +56,13 @@ module.exports = (logger, config, authCallback) => {
       const authUserId = sipClient.getUserIdFromUserData(userData);
 
       if (authCallback) {
-        let failureReason = authCallback(userData);
+        const failureReason = authCallback(userData);
         if (failureReason != null) {
-          throw new Error('Access Denied: ' + failureReason);
+          throw new Error(`Access Denied: ${failureReason}`);
         }
       }
 
-      //TODO needed?
+      // TODO needed?
       /*
       let userPartnerDoc = yield userPartner.findByEmail(email.value);
 
@@ -135,6 +135,25 @@ module.exports = (logger, config, authCallback) => {
     }
   };
 
+  const generatePolicy = (principalId, effect, resource) => {
+    const authResponse = {
+      principalId,
+    };
+
+    if (effect && resource) {
+      authResponse.policyDocument = {
+        Version: '2012-10-17', // default version
+        Statement: [{
+          Action: 'execute-api:Invoke', // default action
+          Effect: effect,
+          Resource: resource,
+        }],
+      };
+    }
+
+    return authResponse;
+  };
+
   const sessionAuthorizer = (event, context, callback) => {
     const token = event.authorizationToken;
     if (!token) {
@@ -162,29 +181,12 @@ module.exports = (logger, config, authCallback) => {
   };
 
   // http://docs.aws.amazon.com/apigateway/latest/developerguide/use-custom-authorizer.html#api-gateway-custom-authorizer-lambda-function-create
-  const generatePolicy = (principalId, effect, resource) => {
-    const authResponse = {
-      principalId,
-    };
 
-    if (effect && resource) {
-      authResponse.policyDocument = {
-        Version: '2012-10-17', // default version
-        Statement: [{
-          Action: 'execute-api:Invoke', // default action
-          Effect: effect,
-          Resource: resource,
-        }],
-      };
-    }
-
-    return authResponse;
-  };
 
   return {
     login,
     keepAlive,
     sessionAuthorizer,
-    sipClient
+    sipClient,
   };
 };
