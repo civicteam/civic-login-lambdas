@@ -7,7 +7,8 @@
     "test": "cross-env NODE_ENV=test nyc --reporter=none mocha",
     "coverage": "cross-env FORCE_COLOR=1 nyc report && nyc check-coverage",
     "lint": "eslint --max-warnings=0 .",
-    "lint-autofix": "eslint --fix ."
+    "lint-autofix": "eslint --fix .",
+    "ci": "npm run test && npm run coverage && npm run lint"
   },
   "author": "Daniel Kelleher",
   "license": "ISC",
