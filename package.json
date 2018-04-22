@@ -23,6 +23,7 @@
     "uuid": "latest"
   },
   "devDependencies": {
+    "winston": "^2.4.2",
     "sinon": "^4.5.0",
     "mocha": "^5.1.1",
     "nyc": "^11.7.1",
@@ -43,6 +44,9 @@
     "branches": 75,
     "exclude": [
       "test/*"
+    ],
+    "include": [
+      "./src/*"
     ]
   },
   "eslintConfig": {
@@ -66,6 +70,7 @@
         }
       ],
       "no-plusplus": "warn",
+      "no-shadow": [2, {"builtinGlobals": false, "hoist": "functions", "allow": ["response", "error"]}],
       "consistent-return": 1,
       "no-param-reassign": 0,
       "one-var": 0
