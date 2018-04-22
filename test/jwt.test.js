@@ -21,9 +21,7 @@ describe('JWT Functions', () => {
   });
 
   it.skip('should verify token', () => {
-    const data = verify(token);
-
-    console.log('---->', data);
+    verify(token);
   });
 
   it('should decode token', () => {
@@ -50,8 +48,6 @@ describe('JWT Functions', () => {
   });
 
   it.skip('should verifyPartnerToken', () => {
-    const data = verifyPartnerToken(partnerToken, 'samplePrvKeyHex');
-
-    console.log('---->', data);
+    verifyPartnerToken(partnerToken, 'samplePrvKeyHex');
   });
 });
