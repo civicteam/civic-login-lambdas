@@ -57,6 +57,9 @@
       "node": true,
       "browser": true
     },
+    "parserOptions": {
+      "ecmaVersion": 6
+    },
     "rules": {
       "max-len": [
         "warn",
