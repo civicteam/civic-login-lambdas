@@ -1,5 +1,4 @@
 module.exports = (logger) => {
-
   const json = (callback, data, statusCode) => {
     // TODO: may have to do this - if returning json or non-html data, then return the HTML wrapped in JSON to preserve encoding
     // callback(null, { data: html });
@@ -34,7 +33,7 @@ module.exports = (logger) => {
     callback(null, response);
   };
 
-  const static = (callback, data, statusCode, contentType = 'text/html') => { 
+  const static = (callback, data, statusCode, contentType = 'text/html') => {
     const response = {
       statusCode,
       headers: {
@@ -106,6 +105,6 @@ module.exports = (logger) => {
     errorJson,
     errorNoCors,
     json,
-    jsonNoCors
+    jsonNoCors,
   };
 };
