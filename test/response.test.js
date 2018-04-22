@@ -22,6 +22,7 @@ describe('Response Functions', () => {
     expect(data.body).to.equal('data');
   });
 
+  // TODO: Fix test
   it.skip('should parse errorJson response', () => {
     errorJson(callback, 'sampleMessage', 400, 'sampleError', 'sampleContext');
 
