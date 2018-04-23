@@ -31,12 +31,12 @@
     "chai": "^4.1.2",
     "cross-env": "^5.1.4",
     "crypto-js": "latest",
-    "json-stable-stringify": "latest",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-babel": "^5.0.0",
     "eslint-plugin-import": "^2.10.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3"
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "json-stable-stringify": "latest"
   },
   "nyc": {
     "lines": 75,
@@ -57,9 +57,6 @@
       "node": true,
       "browser": true
     },
-    "parserOptions": {
-      "ecmaVersion": 6
-    },
     "rules": {
       "max-len": [
         "warn",
@@ -74,7 +71,17 @@
         }
       ],
       "no-plusplus": "warn",
-      "no-shadow": [2, {"builtinGlobals": false, "hoist": "functions", "allow": ["response", "error"]}],
+      "no-shadow": [
+        2,
+        {
+          "builtinGlobals": false,
+          "hoist": "functions",
+          "allow": [
+            "response",
+            "error"
+          ]
+        }
+      ],
       "consistent-return": 1,
       "no-param-reassign": 0,
       "one-var": 0
