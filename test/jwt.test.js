@@ -31,15 +31,12 @@ describe('JWT Functions', () => {
    * 2. retrieve PEM format of key.
    * 3. verify JWT Token signed with HEX_PRVKEY_NIST.
    */
-  it('should verify a JWT token issued for a partner using ES256k key', (done) => {
-    const doneFn = done;
-
+  it('should verify a JWT token issued for a partner using ES256k key', async () => {
     const sampleToken = createPartnerToken('civic-sip-partner-service', 'https://api.civic.com/sip/', 'aaa123', '0m', { status: 'Test' }, HEX_PRVKEY);
 
-    const result = verifyPartnerToken(sampleToken, HEX_PUBKEY);
+    const result = await verifyPartnerToken(sampleToken, HEX_PUBKEY);
 
     expect(result).to.equals(true);
-    doneFn();
   });
 
   it('should verify the partner token', () => {
