@@ -29,14 +29,15 @@
     "mocha": "^5.1.1",
     "nyc": "^11.7.1",
     "chai": "^4.1.2",
+    "civic-log": "github:civicteam/civic-log#2.0.1",
     "cross-env": "^5.1.4",
     "crypto-js": "latest",
-    "json-stable-stringify": "latest",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
     "eslint-plugin-babel": "^5.0.0",
     "eslint-plugin-import": "^2.10.0",
-    "eslint-plugin-jsx-a11y": "^6.0.3"
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "json-stable-stringify": "latest"
   },
   "nyc": {
     "lines": 75,
