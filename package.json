@@ -71,9 +71,6 @@
     "globals": {
       "artifacts": true
     },
-    "parserOptions": {
-      "ecmaVersion": 6
-    },
     "rules": {
       "max-len": [
         "error",
