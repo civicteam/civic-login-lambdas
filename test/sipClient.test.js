@@ -25,12 +25,6 @@ describe('sip Client Functions', function test() {
   };
 
   it('exchangeCode', (done) => {
-    const sampleExchangeCodeResponse = {};
-    sampleExchangeCodeResponse.exchangeCode = () => ({
-      data: 'data',
-      userId: 'userId',
-    });
-    sinon.stub(civicSip, 'newClient').returns(sampleExchangeCodeResponse);
     co(function* coWrapper() {
       const configIn = {
         appId: 'sampleAppId',

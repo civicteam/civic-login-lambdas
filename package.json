@@ -4,7 +4,7 @@
   "description": "Integrate civic login in serverless applications",
   "main": "src/index.js",
   "scripts": {
-    "test": "cross-env NODE_ENV=test nyc --reporter=none mocha",
+    "test": "cross-env NODE_ENV=test nyc --reporter=html mocha",
     "coverage": "cross-env FORCE_COLOR=1 nyc report && nyc check-coverage",
     "lint": "eslint --max-warnings=0 .",
     "lint-autofix": "eslint --fix .",
@@ -58,9 +58,6 @@
       "node": true,
       "browser": true
     },
-    "parserOptions": {
-      "ecmaVersion": 6
-    },
     "rules": {
       "max-len": [
         "warn",
@@ -75,7 +72,17 @@
         }
       ],
       "no-plusplus": "warn",
-      "no-shadow": [2, {"builtinGlobals": false, "hoist": "functions", "allow": ["response", "error"]}],
+      "no-shadow": [
+        2,
+        {
+          "builtinGlobals": false,
+          "hoist": "functions",
+          "allow": [
+            "response",
+            "error"
+          ]
+        }
+      ],
       "consistent-return": 1,
       "no-param-reassign": 0,
       "one-var": 0

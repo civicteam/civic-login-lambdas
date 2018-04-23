@@ -4,6 +4,7 @@ const uuidV4 = require('uuid/v4');
 const handler = require('../src/index');
 const sinon = require('sinon');
 const Winston = require('winston');
+const civicSip = require('civic-sip-api');
 
 const logger = Winston;
 
@@ -18,7 +19,21 @@ const payload = {
   codeToken: authCode,
 };
 
-const loginHandler = handler(logger, {}, {});
+const config = {
+  app: {
+    appId: 'HkEQPA4YZ',
+    appSecret: '',
+    prvKey: '',
+  },
+  sessionToken: {
+    issuer: '',
+    audience: '',
+    subject: '',
+    pubKey: '',
+    prvKey: '',
+  },
+};
+
 
 const authResponse = jwt.createToken(
   'civic-sip-hosted-service',
@@ -53,6 +68,12 @@ const partner = {
 const appPartner = {
   findByAppPartner: () => {},
 };
+const simpleExchangeCodeResponse = {};
+
+simpleExchangeCodeResponse.exchangeCode = () => ({
+  data: 'data',
+  userId: 'userId',
+});
 
 const samplePromise = Promise.resolve(('Sample Promise'));
 sandbox.stub(scopeRequest, 'save').returns(samplePromise);
@@ -62,8 +83,9 @@ sandbox.stub(partner, 'findByDomain').returns({});
 sandbox.stub(partner, 'delete').returns({});
 sandbox.stub(partner, 'insert').returns({});
 sandbox.stub(appPartner, 'findByAppPartner').returns({});
+sandbox.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
 
-const keys = {};
+const loginHandler = handler(logger, config);
 
 const validScopeRequest = {
   authCode,
@@ -84,7 +106,7 @@ const loginAndGetUserId = token => co(function* coWrapper() {
     });
   });
   const authResp = yield new Promise((resolve) => {
-    handler.sessionAuthorizer({
+    loginHandler.sessionAuthorizer({
       authorizationToken: JSON.parse(login.body).sessionToken,
     }, {}, (err, response) => {
       resolve(response);
@@ -100,6 +122,7 @@ const loginAndGetUserId = token => co(function* coWrapper() {
 
 describe('Partner Handler Functions', function test() {
   this.timeout(10000);
+
   before((done) => {
     co(function* coWrapper() {
       yield scopeRequest.save(validScopeRequest);
@@ -149,23 +172,6 @@ describe('Partner Handler Functions', function test() {
       }, {
         email: 'someuser@domaininuse.com',
       });
-
-      // partnerDoc = yield partner.insert({
-      //   browserFlowEnabled: false,
-      //   primaryDomain: 'test.com',
-      //   // domains: [],
-      //   // logo: '',
-      //   name: 'test',
-      // // primaryColor: '',
-      // // pubKey: '',
-      // // secondaryColor: '',
-      // // secret: '',
-      // });
-      // yield userPartner.insert({
-      //   email: 'stewart@test.com',
-      //   appId: partnerDoc.appId,
-      //   authUserId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650',
-      // });
     }).then(done, done);
   });
 
@@ -180,11 +186,26 @@ describe('Partner Handler Functions', function test() {
           resolve(res);
         });
       });
-      console.log(response, event);
-      // expect(response.statusCode).to.equal(200);
-      // expect(JSON.parse(response.body)).to.be.an('object');
-      // expect(JSON.parse(response.body).sessionToken).to.be.an('string');
-      // expect(JSON.parse(response.body).isRegistered).to.equal(false);
+      expect(response.statusCode).to.equal(200);
+      expect(JSON.parse(response.body)).to.be.an('object');
+      expect(JSON.parse(response.body).sessionToken).to.be.an('string');
+    });
+  });
+
+  it.skip('reject login given an  invalid authToken - new user', async () => {
+    await co(function* coWrapper() {
+      const response = yield new Promise((resolve) => {
+        loginHandler.login({
+          body: JSON.stringify({
+            authToken: { k: 'l' },
+          }),
+        }, {}, (err, res) => {
+          resolve(res);
+        });
+      });
+      expect(response.statusCode).to.equal(200);
+      expect(JSON.parse(response.body)).to.be.an('object');
+      expect(JSON.parse(response.body).sessionToken).to.be.a('string');
     });
   });
 
@@ -197,7 +218,7 @@ describe('Partner Handler Functions', function test() {
         });
       }
       const response = yield new Promise((resolve) => {
-        handler.login({
+        loginHandler.login({
           body: JSON.stringify({
             authToken: event.response,
           }),
@@ -211,7 +232,7 @@ describe('Partner Handler Functions', function test() {
     }).then(done, done);
   });
 
-  it.only('renew a valid sessionToken', (done) => {
+  it('renew a valid sessionToken', (done) => {
     co(function* coWrapper() {
       const login = yield loginAndGetUserId(event.response);
       const keepAlive = yield new Promise((resolve) => {
@@ -228,924 +249,10 @@ describe('Partner Handler Functions', function test() {
           resolve(response);
         });
       });
-      // console.log(login, keepAlive);
       expect(keepAlive.statusCode).to.equal(200);
       expect(JSON.parse(keepAlive.body)).to.be.an('object');
       expect(JSON.parse(keepAlive.body).sessionToken).to.be.an('string');
       expect(JSON.parse(keepAlive.body).sessionToken).to.be.not.equal(login.sessionToken);
-    }).then(done, done);
-  });
-
-  it('register given a valid sessionToken', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const register = yield new Promise((resolve) => {
-        handler.register({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'sign up test',
-            primaryDomain: 'https://blahhhh.com',
-            primaryContactName: 'John',
-            primaryContactEmail: 'someone@civic.com',
-            primaryContactPhoneNumber: '+15595496152',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(register);
-      expect(register.statusCode).to.equal(200);
-    }).then(done, done);
-  });
-
-  it('update partner given a valid sessionToken', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      // expect(login.statusCode).to.equal(200);
-      // const register = yield new Promise((resolve) => {
-      //   handler.register({
-      //     headers: {
-      //       Authorization: JSON.parse(login.body).sessionToken,
-      //     },
-      //     body: JSON.stringify({
-      //       name: 'sign up test',
-      //       primaryDomain: 'testUpdate.com',
-      //     }),
-      //   }, {}, (err, response) => {
-      //     resolve(response);
-      //   });
-      // });
-      // console.log(register);
-      // expect(register.statusCode).to.equal(200);
-
-      const update = yield new Promise((resolve) => {
-        handler.partnerUpdate({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'sign up test 2',
-            primaryDomain: 'test.com',
-            primaryContactName: 'John',
-            primaryContactEmail: 'someone@civic.com',
-            primaryContactPhoneNumber: '+15595496152',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(update);
-      expect(update.statusCode).to.equal(200);
-    }).then(done, done);
-  });
-
-  it.skip('deleteAll given a valid sessionToken', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const register = yield new Promise((resolve) => {
-        handler.deleteAll({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(register);
-      expect(register.statusCode).to.equal(200);
-    }).then(done, done);
-  });
-
-  it('insert and modify an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test app',
-            domains: ['https://www.myapp.com', 'https://localhost:3000'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(app);
-      expect(app.statusCode).to.equal(200);
-      expect(JSON.parse(app.body)).to.be.an('object');
-      expect(JSON.parse(app.body).name).to.equal('test app');
-      const { applicationId } = JSON.parse(app.body);
-      const appUpdated = yield new Promise((resolve) => {
-        handler.appUpdate({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test app updated',
-            domains: ['http://myapp.com', 'https://localhost:3000'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appUpdated.statusCode).to.equal(200);
-      expect(JSON.parse(appUpdated.body)).to.be.an('object');
-      expect(JSON.parse(appUpdated.body).applicationId).to.equal(applicationId);
-      expect(JSON.parse(appUpdated.body).partnerAppId).to.equal(JSON.parse(app.body).partnerAppId);
-      expect(JSON.parse(appUpdated.body).name).to.equal('test app updated');
-
-      const appGet = yield new Promise((resolve) => {
-        handler.appGetById({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appGet.statusCode).to.equal(200);
-      expect(JSON.parse(appGet.body)).to.be.an('object');
-      expect(JSON.parse(appGet.body).applicationId).to.equal(applicationId);
-    }).then(done, done);
-  });
-
-  it('get apps', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const apps = yield new Promise((resolve) => {
-        handler.appGet({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(apps);
-      expect(JSON.parse(apps.body)).to.be.an('array');
-    }).then(done, done);
-  });
-
-  it('add and remove an key for an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test key app',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(app);
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-      const encrypted = keys.encryptForPartner('secret');
-      const appUpdated = yield new Promise((resolve) => {
-        handler.appAddKey({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            pubKey: 'pubKey',
-            secret: encrypted,
-            encPubKey: 'encPubKey',
-            encrypted: true,
-          }),
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appUpdated);
-      expect(appUpdated.statusCode).to.equal(200);
-      expect(JSON.parse(appUpdated.body)).to.be.an('object');
-      expect(JSON.parse(appUpdated.body).applicationId).to.equal(applicationId);
-      const appRevokeKey = yield new Promise((resolve) => {
-        handler.appRevokeKey({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            pubKey: 'pubKey',
-            encPubKey: 'encPubKey',
-            validFor: 60,
-          }),
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appRevokeKey);
-      expect(appRevokeKey.statusCode).to.equal(200);
-      expect(JSON.parse(appRevokeKey.body)).to.be.an('object');
-      expect(JSON.parse(appRevokeKey.body).applicationId).to.equal(applicationId);
-      const appRemoveKey = yield new Promise((resolve) => {
-        handler.appRemoveKey({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            pubKey: 'pubKey',
-            encPubKey: 'encPubKey',
-          }),
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appRemoveKey);
-      expect(appRemoveKey.statusCode).to.equal(200);
-      expect(JSON.parse(appRemoveKey.body)).to.be.an('object');
-      expect(JSON.parse(appRemoveKey.body).applicationId).to.equal(applicationId);
-      const apps = yield new Promise((resolve) => {
-        handler.appGet({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(apps);
-      expect(JSON.parse(apps.body)).to.be.an('array');
-    }).then(done, done);
-  });
-
-  it('regenerate a key for an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test key app 2',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(app);
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-      const encrypted = keys.encryptForPartner('secret');
-      const appUpdated = yield new Promise((resolve) => {
-        handler.appAddKey({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            pubKey: 'pubKey',
-            secret: encrypted,
-            encPubKey: 'encPubKey',
-            encrypted: true,
-          }),
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appUpdated);
-      expect(appUpdated.statusCode).to.equal(200);
-      expect(JSON.parse(appUpdated.body)).to.be.an('object');
-      expect(JSON.parse(appUpdated.body).applicationId).to.equal(applicationId);
-      const appRegenerateKey = yield new Promise((resolve) => {
-        handler.appRegenerateKey({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            pubKey: 'pubKey2',
-            secret: encrypted,
-            encPubKey: 'encPubKey2',
-            encrypted: true,
-            validFor: 3600,
-          }),
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appRegenerateKey);
-      expect(appRegenerateKey.statusCode).to.equal(200);
-      expect(JSON.parse(appRegenerateKey.body)).to.be.an('object');
-      expect(JSON.parse(appRegenerateKey.body).applicationId).to.equal(applicationId);
-      const apps = yield new Promise((resolve) => {
-        handler.appGet({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(apps);
-      expect(JSON.parse(apps.body)).to.be.an('array');
-    }).then(done, done);
-  });
-
-  it('promote an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test key app',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(app);
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-      const appPromoteRequest = yield new Promise((resolve) => {
-        handler.appPromoteRequest({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appPromoteRequest);
-      expect(appPromoteRequest.statusCode).to.equal(200);
-      expect(JSON.parse(appPromoteRequest.body)).to.be.an('object');
-      expect(JSON.parse(appPromoteRequest.body).applicationId).to.equal(applicationId);
-
-      yield appPartner.approve(applicationId, JSON.parse(appPromoteRequest.body).partnerAppId);
-
-      const appPromoted = yield new Promise((resolve) => {
-        handler.appPromote({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appPromoted);
-      expect(appPromoted.statusCode).to.equal(200);
-      expect(JSON.parse(appPromoted.body)).to.be.an('object');
-      expect(JSON.parse(appPromoted.body).applicationId).to.equal(applicationId);
-      const appDemoted = yield new Promise((resolve) => {
-        handler.appDemote({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appDemoted);
-      expect(appDemoted.statusCode).to.equal(200);
-      expect(JSON.parse(appDemoted.body)).to.be.an('object');
-      expect(JSON.parse(appDemoted.body).applicationId).to.equal(applicationId);
-    }).then(done, done);
-  });
-
-  it('delete an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test delete app',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(app);
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-      const appDelete = yield new Promise((resolve) => {
-        handler.appDelete({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appDelete);
-      expect(appDelete.statusCode).to.equal(200);
-    }).then(done, done);
-  });
-
-  it('suspends an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test suspend app',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-
-      const appPromoteRequest = yield new Promise((resolve) => {
-        handler.appPromoteRequest({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appPromoteRequest);
-      expect(appPromoteRequest.statusCode).to.equal(200);
-
-      yield appPartner.approve(applicationId, JSON.parse(app.body).partnerAppId);
-
-      const appPromoted = yield new Promise((resolve) => {
-        handler.appPromote({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appPromoted.statusCode).to.equal(200);
-      const appSuspend = yield new Promise((resolve) => {
-        handler.appSuspend({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-          body: JSON.stringify({ value: true }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appSuspend.statusCode).to.equal(200);
-    }).then(done, done);
-  });
-
-  it('unsuspends an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test suspend app',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-
-      const appPromoteRequest = yield new Promise((resolve) => {
-        handler.appPromoteRequest({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(appPromoteRequest);
-      expect(appPromoteRequest.statusCode).to.equal(200);
-
-      yield appPartner.approve(applicationId, JSON.parse(app.body).partnerAppId);
-
-      const appPromoted = yield new Promise((resolve) => {
-        handler.appPromote({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appPromoted.statusCode).to.equal(200);
-
-      const appSuspend = yield new Promise((resolve) => {
-        handler.appSuspend({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-          body: JSON.stringify({ value: true }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appSuspend.statusCode).to.equal(200);
-
-      const appUnSuspend = yield new Promise((resolve) => {
-        handler.appSuspend({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-          body: JSON.stringify({ value: false }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appUnSuspend.statusCode).to.equal(200);
-    }).then(done, done);
-  });
-
-  it('does not allow an invalid value for suspension of an app', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const app = yield new Promise((resolve) => {
-        handler.appPost({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            name: 'test suspend app',
-            domains: ['https://www.myapp.com'],
-            browserFlowEnabled: false,
-            logo: 'https://www.mylogourl.com/some.jpg',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(app.statusCode).to.equal(200);
-      const { applicationId } = JSON.parse(app.body);
-      const appSuspend = yield new Promise((resolve) => {
-        handler.appSuspend({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          pathParameters: {
-            id: applicationId,
-          },
-          body: JSON.stringify({ value: 'somethingelse' }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(appSuspend.statusCode).to.equal(400);
-    }).then(done, done);
-  });
-
-  it('get/list users', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const users = yield new Promise((resolve) => {
-        handler.teamUsersList(
-          {
-            headers: {
-              Authorization: login.sessionToken,
-            },
-            requestContext: {
-              authorizer: {
-                userId: login.userId,
-              },
-            },
-          },
-          {},
-          (err, response) => {
-            resolve(response);
-          },
-        );
-      });
-      // console.log(users);
-      expect(JSON.parse(users.body)).to.be.an('array');
-    }).then(done, done);
-  });
-
-  it('creates/invite/updates/deletes a new user', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const newUser = yield new Promise((resolve) => {
-        handler.teamUsersCreate({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            email: 'savio+unittest1@civic.com',
-            role: 'ADMIN',
-          }),
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      // console.log(newUser);
-      expect(newUser.statusCode).to.equal(200);
-      expect(JSON.parse(newUser.body)).to.be.an('object');
-      expect(JSON.parse(newUser.body).email).to.equal('savio+unittest1@civic.com');
-      expect(JSON.parse(newUser.body).role).to.equal('ADMIN');
-
-      const { userId } = JSON.parse(newUser.body);
-
-      const userUpdated = yield new Promise((resolve) => {
-        handler.teamUsersUpdate({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({
-            role: 'DEVELOPER',
-          }),
-          pathParameters: {
-            id: userId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(userUpdated.statusCode).to.equal(200);
-      expect(JSON.parse(userUpdated.body)).to.be.an('object');
-      expect(JSON.parse(userUpdated.body).userId).to.equal(userId);
-      expect(JSON.parse(userUpdated.body).role).to.equal('DEVELOPER');
-
-      const userDeleted = yield new Promise((resolve) => {
-        handler.teamUsersUpdate({
-          headers: {
-            Authorization: login.sessionToken,
-          },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-          body: JSON.stringify({}),
-          pathParameters: {
-            id: userId,
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
-      });
-      expect(userDeleted.statusCode).to.equal(200);
     }).then(done, done);
   });
 });
