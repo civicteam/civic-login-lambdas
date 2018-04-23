@@ -33,19 +33,19 @@ module.exports = (logger) => {
     callback(null, response);
   };
 
-  const static = (callback, data, statusCode, contentType = 'text/html') => {
-    const response = {
-      statusCode,
-      headers: {
-        'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-        'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
-        'Content-Type': contentType,
-      },
-      body: data,
-    };
+  // const static = (callback, data, statusCode, contentType = 'text/html') => {
+  //   const response = {
+  //     statusCode,
+  //     headers: {
+  //       'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+  //       'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
+  //       'Content-Type': contentType,
+  //     },
+  //     body: data,
+  //   };
 
-    callback(null, response);
-  };
+  //   callback(null, response);
+  // };
 
   const error = (callback, data, statusCode) => {
     let body = data;
