@@ -41,7 +41,7 @@ exports.createToken = (issuer, audience, subject, expiresIn, payload, prvKeyHex)
   // unknown ECDSA sig r length error
   // unknown ECDSA sig s length error
   let token;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 5; i += 1) {
     try {
       token = rs.jws.JWS.sign(null, sHeader, sContent, prvKey);
       break;
