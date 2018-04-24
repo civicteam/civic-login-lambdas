@@ -1,3 +1,4 @@
+/* eslint-disable max-len  */
 const { expect } = require('chai');
 const co = require('co');
 const sipClient = require('../src/sipClient');

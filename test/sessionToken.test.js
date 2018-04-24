@@ -1,64 +1,63 @@
 /* eslint-disable no-unused-expressions, no-console */
 
-// todo fix this
-process.env.STAGE = 'dev';
-process.env.IS_OFFLINE = true;
+const { expect } = require('chai');
+const session = require('../src/sessionToken');
 
-const { assert } = require('chai');
-const sessionToken = require('../src/sessionToken');
-
+const configSession = {
+  issuer: '',
+  audience: '',
+  subject: '',
+  pubKey: '',
+  prvKey: '',
+};
+const sessionToken = session(configSession);
 describe('SessionToken Functions', function test() {
   this.timeout(10000);
 
-  it('create a valid session token', (done) => {
+  it('create a valid session token', async () => {
     const origUserId = 'userid-1';
-    const token = sessionToken.create(origUserId, '1m');
-    assert(token, 'token not created');
-    // console.log(token);
+    const token = await sessionToken.create(origUserId, '1m');
+    expect(token).to.not.be.undefined;
+    expect(token).to.be.a('string');
     const userId = sessionToken.validate(token);
-    // console.log(userId);
-    assert(origUserId === userId, 'no valid user id');
-
-    assert(sessionToken.test.verify(token, 60), 'token not valid');
-    done();
-  });
-
-  it('validate an expired session token', (done) => {
-    const origUserId = 'userid-1';
-    const token = sessionToken.create(origUserId, '1s');
-    assert(token, 'token not created');
-    // console.log(token);
-    const userId = sessionToken.validate(token);
-    // console.log(userId);
-    assert(origUserId === userId, 'no valid user id');
-
     setTimeout(() => {
-      assert(!sessionToken.test.verify(token, 1), 'token valid');
-      done();
+      expect(origUserId).to.equal(userId);
+      expect(sessionToken.test.verify(token, 60)).to.be.true;
     }, 3500);
   });
 
-  it('validate an session token from event', (done) => {
+  it('validate an expired session token', async () => {
     const origUserId = 'userid-1';
-    const token = sessionToken.create(origUserId, '1m');
-    assert(token, 'token not created');
-    // console.log(token);
-    const userId = sessionToken.validateFromEvent({ headers: { Authorization: token } });
-    // console.log(userId);
-    assert(origUserId === userId, 'no valid user id');
-
-    assert(sessionToken.test.verify(token, 60), 'token not valid');
-    done();
+    const token = await sessionToken.create(origUserId, '1s');
+    expect(token).to.not.be.undefined;
+    expect(token).to.be.a('string');
+    const userId = await sessionToken.validate(token);
+    setTimeout(() => {
+      expect(origUserId).to.equal(userId);
+      expect(sessionToken.test.verify(token, 1)).to.be.true;
+    }, 3500);
   });
 
-  it('renew an session token from event', (done) => {
+  it('validate an session token from event', async () => {
     const origUserId = 'userid-1';
-    const token = sessionToken.create(origUserId, '1m');
-    assert(token, 'token not created');
-    // console.log(token);
-    const newToken = sessionToken.keepAliveFromEvent({ headers: { Authorization: token } });
+    const token = await sessionToken.create(origUserId, '1m');
+    expect(token).to.not.be.undefined;
+    expect(token).to.be.a('string');
+    const userId = await sessionToken.validateFromEvent({ headers: { Authorization: token } });
+    setTimeout(() => {
+      expect(origUserId).to.equal(userId);
+      expect(sessionToken.test.verify(token, 60)).to.be.true;
+    }, 3500);
+  });
 
-    assert(sessionToken.test.verify(newToken, 60), 'new token not valid');
-    done();
+  it('renew an session token from event', async () => {
+    const origUserId = 'userid-1';
+    const token = await sessionToken.create(origUserId, '1m');
+    expect(token).to.not.be.undefined;
+    expect(token).to.be.a('string');
+    const newToken = await sessionToken.keepAliveFromEvent({ headers: { Authorization: token } });
+    setTimeout(() => {
+      expect(sessionToken.test.verify(newToken, 60)).to.be.true;
+    }, 3500);
   });
 });

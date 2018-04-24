@@ -62,25 +62,6 @@ module.exports = (logger, config, authCallback) => {
         }
       }
 
-      // TODO needed?
-      /*
-      let userPartnerDoc = yield userPartner.findByEmail(email.value);
-
-      if (!userPartnerDoc) {
-        logger.info(`No item found for partner user, inserting by email: ${email.value}`);
-        userPartnerDoc = yield userPartner.insert({
-          email: email.value,
-          authUserId,
-          role: userPartner.userRoles.OWNER,
-          status: userPartner.userStatuses.ACTIVE,
-        }, null, null, getTrackMetaInfo(event));
-
-        if (!userPartnerDoc) {
-          throw new Error('user partner insert failed');
-        }
-      }
-      */
-
       const token = sessionToken.create(authUserId);
 
       return {

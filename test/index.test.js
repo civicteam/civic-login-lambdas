@@ -10,7 +10,6 @@ const logger = Winston;
 
 const co = require('co');
 const jwt = require('../src/jwt');
-// const hostedServices = require('../lib/HostedServices').hostedServices;
 
 const authCode = uuidV4();
 const appId = 'HkEQPA4YZ';
@@ -29,8 +28,8 @@ const config = {
     issuer: '',
     audience: '',
     subject: '',
-    pubKey: '',
-    prvKey: '',
+    pubKey: '0403eaecceb589599323125f6cd891816eeccf785a931f816769bf36d34fa7a74f5e4ecf46cf30d170cb61cd21b33525b825f9e1641031fa1acd57654b4b552278',
+    prvKey: 'b75e40dbc38af78efc99f78ef89d5f8884c45d188f7afe596bd981f8195131dc',
   },
 };
 
@@ -48,6 +47,13 @@ const event = {
   event: 'scoperequest:data-received',
   type: 'code',
   response: authResponse,
+};
+
+const sampleWarmEvent = {
+  event: 'scoperequest:data-received',
+  type: 'code',
+  response: authResponse,
+  source: 'serverless-plugin-warmup',
 };
 
 const scopeRequest = {
@@ -85,7 +91,7 @@ sandbox.stub(partner, 'insert').returns({});
 sandbox.stub(appPartner, 'findByAppPartner').returns({});
 sandbox.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
 
-const loginHandler = handler(logger, config);
+const loginHandler = handler(logger, config, (err, response) => response);
 
 const validScopeRequest = {
   authCode,
@@ -95,28 +101,36 @@ const validScopeRequest = {
   browserFlowEnabled: false,
 };
 
-const loginAndGetUserId = token => co(function* coWrapper() {
-  const login = yield new Promise((resolve) => {
+const loginAndGetUserId = token => new Promise((resolve, reject) => {
+  const login = new Promise((resolveLogin) => {
     loginHandler.login({
       body: JSON.stringify({
         authToken: token,
       }),
     }, {}, (err, response) => {
-      resolve(response);
-    });
-  });
-  const authResp = yield new Promise((resolve) => {
-    loginHandler.sessionAuthorizer({
-      authorizationToken: JSON.parse(login.body).sessionToken,
-    }, {}, (err, response) => {
-      resolve(response);
+      resolveLogin(response);
     });
   });
 
-  return {
-    userId: authResp.context.userId,
-    sessionToken: JSON.parse(login.body).sessionToken,
-  };
+  login.then((val) => {
+    const authResp = new Promise((resolveAuth) => {
+      loginHandler.sessionAuthorizer({
+        authorizationToken: JSON.parse(val.body).sessionToken,
+      }, {}, (err, response) => {
+        resolveAuth(response);
+      });
+    });
+
+    authResp.then((authResVal) => {
+      resolve({
+        userId: authResVal.context.userId,
+        sessionToken: JSON.parse(val.body).sessionToken,
+      });
+    });
+  }).catch((err) => {
+    console.log('jhfilkjhghknb');
+    reject(err);
+  });
 });
 
 
@@ -192,20 +206,30 @@ describe('Partner Handler Functions', function test() {
     });
   });
 
-  it.skip('reject login given an  invalid authToken - new user', async () => {
+  it('keep lambda warm with source event', async () => {
+    await co(function* coWrapper() {
+      const response = yield new Promise((resolve) => {
+        loginHandler.login(sampleWarmEvent, {}, (err, res) => {
+          resolve(res);
+        });
+      });
+      console.log('myResponse', response);
+      expect(response).to.equal('Lambda is being kept warm!');
+    });
+  });
+
+  it('reject login with no auth Token', async () => {
     await co(function* coWrapper() {
       const response = yield new Promise((resolve) => {
         loginHandler.login({
           body: JSON.stringify({
-            authToken: { k: 'l' },
           }),
         }, {}, (err, res) => {
           resolve(res);
         });
       });
-      expect(response.statusCode).to.equal(200);
-      expect(JSON.parse(response.body)).to.be.an('object');
-      expect(JSON.parse(response.body).sessionToken).to.be.a('string');
+      expect(response.statusCode).to.equal(400);
+      expect(JSON.parse(response.body).message).to.equal('no authToken provided');
     });
   });
 
@@ -232,27 +256,47 @@ describe('Partner Handler Functions', function test() {
     }).then(done, done);
   });
 
-  it('renew a valid sessionToken', (done) => {
-    co(function* coWrapper() {
-      const login = yield loginAndGetUserId(event.response);
-      const keepAlive = yield new Promise((resolve) => {
-        loginHandler.keepAlive({
-          headers: {
-            Authorization: login.sessionToken,
+  it('renew a valid sessionToken', async () => {
+    const login = await loginAndGetUserId(event.response);
+    console.log('myLOgin', login);
+    const keepAliveWrapper = new Promise((resolve) => {
+      loginHandler.keepAlive({
+        headers: {
+          Authorization: login.sessionToken,
+        },
+        requestContext: {
+          authorizer: {
+            userId: login.userId,
           },
-          requestContext: {
-            authorizer: {
-              userId: login.userId,
-            },
-          },
-        }, {}, (err, response) => {
-          resolve(response);
-        });
+        },
+      }, {}, (err, response) => {
+        resolve(response);
       });
-      expect(keepAlive.statusCode).to.equal(200);
-      expect(JSON.parse(keepAlive.body)).to.be.an('object');
-      expect(JSON.parse(keepAlive.body).sessionToken).to.be.an('string');
-      expect(JSON.parse(keepAlive.body).sessionToken).to.be.not.equal(login.sessionToken);
-    }).then(done, done);
+    });
+    const keepAlive = await keepAliveWrapper;
+    expect(keepAlive.statusCode).to.equal(200);
+    expect(JSON.parse(keepAlive.body)).to.be.an('object');
+    expect(JSON.parse(keepAlive.body).sessionToken).to.be.an('string');
+    expect(JSON.parse(keepAlive.body).sessionToken).to.be.not.equal(login.sessionToken);
+  });
+
+  it('renew a without sessionToken', async () => {
+    const keepAliveWrapper = new Promise((resolve) => {
+      loginHandler.keepAlive({
+        headers: {
+          Authorization: '',
+        },
+        requestContext: {
+          authorizer: {
+            userId: '',
+          },
+        },
+      }, {}, (err, response) => {
+        resolve(response);
+      });
+    });
+    const keepAlive = await keepAliveWrapper;
+    expect(keepAlive.statusCode).to.equal(401);
+    expect(JSON.parse(keepAlive.body).message).to.deep.equal('Unauthorized');
   });
 });
