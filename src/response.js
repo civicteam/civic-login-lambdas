@@ -83,7 +83,8 @@ module.exports = (logger) => {
     if (!data.error) {
       data.error = data.message;
     }
-    return exports.json(callback, data, statusCode, context);
+
+    return json(callback, data, statusCode, context);
   };
 
   return {
