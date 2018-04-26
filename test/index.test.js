@@ -119,9 +119,7 @@ const loginAndGetUserId = token => new Promise((resolve, reject) => {
 });
 
 
-describe('Partner Handler Functions', function test() {
-  this.timeout(10000);
-
+describe('Partner Handler Functions', () => {
   before((done) => {
     co(function* coWrapper() {
       yield scopeRequest.save(validScopeRequest);

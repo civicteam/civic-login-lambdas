@@ -5,9 +5,7 @@ const session = require('../src/sessionToken');
 const { config } = require('../assets/tests');
 
 const sessionToken = session(config.sessionToken);
-describe('SessionToken Functions', function test() {
-  this.timeout(10000);
-
+describe('SessionToken Functions', () => {
   it('create a valid session token', async () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
