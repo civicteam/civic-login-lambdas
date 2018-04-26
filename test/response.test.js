@@ -22,12 +22,11 @@ describe('Response Functions', () => {
     expect(data.body).to.equal('data');
   });
 
-  // TODO: Fix test
-  it.skip('should parse errorJson response', () => {
+  it('should parse errorJson response', () => {
     errorJson(callback, 'sampleMessage', 400, 'sampleError', 'sampleContext');
-
     expect(data.statusCode).to.equal(400);
-    expect(data.body).to.equal('sampleMessage');
+    expect(JSON.parse(data.body).message).to.equal('sampleMessage');
+    expect(JSON.parse(data.body).error).to.equal('sampleError');
   });
 
   it('should parse errorJson response', () => {
