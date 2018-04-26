@@ -1,12 +1,10 @@
-/* eslint-disable no-unused-expressions, no-console */
-
 const { expect } = require('chai');
 const session = require('../src/sessionToken');
 const { config } = require('../assets/tests');
 
 const sessionToken = session(config.sessionToken);
 describe('SessionToken Functions', () => {
-  it('create a valid session token', async () => {
+  it('create a valid session token', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;
@@ -16,7 +14,7 @@ describe('SessionToken Functions', () => {
     expect(sessionToken.test.verify(token, 60)).to.be.true;
   });
 
-  it('validate an expired session token', async () => {
+  it('validate an expired session token', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1s');
     expect(token).to.not.be.undefined;
@@ -26,7 +24,7 @@ describe('SessionToken Functions', () => {
     expect(sessionToken.test.verify(token, 1)).to.be.true;
   });
 
-  it('validate an session token from event', async () => {
+  it('validate an session token from event', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;
@@ -36,7 +34,7 @@ describe('SessionToken Functions', () => {
     expect(sessionToken.test.verify(token, 60)).to.be.true;
   });
 
-  it('renew an session token from event', async () => {
+  it('renew an session token from event', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;
