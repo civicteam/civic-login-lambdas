@@ -14,7 +14,7 @@ module.exports = (sessionConfig) => {
     return jwt.createToken(sessionConfig.issuer, sessionConfig.audience, sessionConfig.subject, expiration, payload, sessionConfig.prvKey);
   };
 
-  const verify = async (jwToken, gracePeriod = JWT_GRACE_PERIOD) => jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
+  const verify = (jwToken, gracePeriod = JWT_GRACE_PERIOD) => jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
 
   const validate = (token) => {
     if (!token || !verify(token)) {

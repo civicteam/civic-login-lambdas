@@ -19,10 +19,11 @@ describe('SessionToken Functions', function test() {
     const token = await sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;
     expect(token).to.be.a('string');
-    const userId = await sessionToken.validate(token);
-    expect(origUserId).to.equal(userId);
-    const verified = await sessionToken.test.verify(token, 60)
-    expect(verified).to.be.true;
+    const userId = sessionToken.validate(token);
+    setTimeout(() => {
+      expect(origUserId).to.equal(userId);
+      expect(sessionToken.test.verify(token, 60)).to.be.true;
+    }, 3500);
   });
 
   it('validate an expired session token', async () => {
