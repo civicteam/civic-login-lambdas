@@ -1,5 +1,4 @@
 const co = require('co');
-// const _ = require('lodash');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
