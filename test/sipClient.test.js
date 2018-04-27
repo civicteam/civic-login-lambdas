@@ -3,12 +3,6 @@ const co = require('co');
 const sipClient = require('../src/sipClient');
 const { response } = require('../assets/tests.json').sipClientTest;
 
-const config = {
-  appPartner: {},
-  env: '',
-  api: '',
-};
-
 describe('sip Client Functions', () => {
   const event = {
     event: 'scoperequest:data-received',
@@ -31,8 +25,8 @@ describe('sip Client Functions', () => {
         appId: 'sampleAppId',
         appSecret: 'sampleAppSecret',
         prvKey: 'samplePrvKey',
-        env: config.env,
-        api: config.api,
+        env: '',
+        api: '',
       };
       const data = yield sipClient.exchangeCode(configIn, event.response);
 
