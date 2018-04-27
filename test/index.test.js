@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const Winston = require('winston');
 const civicSip = require('civic-sip-api');
 
-const { appId, config } = require('../assets/tests');
+const { appId, config } = require('../assets/tests').indexTest;
 
 const logger = Winston;
 

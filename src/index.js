@@ -5,7 +5,7 @@ const responseFactory = require('./response');
 
 module.exports = (logger, config, authCallback) => {
   const response = responseFactory(logger);
-  const sessionToken = sessionTokenFactory(config.sessionToken);
+  const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
   /**
    * @api {post} admin/login  /../login (POST)

@@ -1,11 +1,10 @@
-/* eslint-disable no-console */
 const uuidV4 = require('uuid/v4');
 const jwt = require('./jwt');
 
 const JWT_EXPIRATION = '10m'; // 10 minutes
 const JWT_GRACE_PERIOD = 60; // 1 minutes
 
-module.exports = (sessionConfig) => {
+module.exports = (sessionConfig, logger) => {
   const create = (userId, expiration = JWT_EXPIRATION) => {
     const payload = {
       sessionId: uuidV4(),
@@ -18,7 +17,7 @@ module.exports = (sessionConfig) => {
 
   const validate = (token) => {
     if (!token || !verify(token)) {
-      console.warn('Validate: No token found or token unverified - ', token);
+      logger.warn('Validate: No token found or token unverified - ', token);
       return false;
     }
     const decoded = jwt.decode(token);
@@ -26,7 +25,7 @@ module.exports = (sessionConfig) => {
     if (decoded && decoded.payloadObj && decoded.payloadObj.data) {
       return decoded.payloadObj.data.userId;
     }
-    console.warn('Validate decode: payload not decoded - ', decoded);
+    logger.warn('Validate decode: payload not decoded - ', decoded);
     return false;
   };
 

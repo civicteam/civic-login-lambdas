@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const jwt = require('../src/jwt');
-const { partnerToken } = require('../assets/tests');
+const {
+  partnerToken, HEX_PRVKEY, HEX_PUBKEY, PARTNER_SERVICES_HEX_KEY,
+} = require('../assets/tests').JwtTest;
 
 describe('JWT Functions', () => {
   const {
@@ -11,9 +13,6 @@ describe('JWT Functions', () => {
     verifyPartnerToken,
   } = jwt;
   let token = '';
-
-  const HEX_PRVKEY = 'ee6f4f05a6f2b4005c19dfd0e9fcacd31c1c8f4102b51a62932934210ac7f9b0';
-  const HEX_PUBKEY = '040a476f774d9b853825fa17dce901e4986452fbbc6d0503206d131bca993923cdc140485f127ee747efe0ca9a29a4998c34fea0e9c43b649e2d077dc6c9fb34dc';
 
   it('should createToken', () => {
     const data = createToken('sampleIssuer', 'sampleAudience', 'sampleSubject', '10h', 'samplePayload', 'samplePrvKeyHex');
@@ -36,7 +35,6 @@ describe('JWT Functions', () => {
   });
 
   it('should verify the partner token', () => {
-    const PARTNER_SERVICES_HEX_KEY = '04b772fa849b79d810856173e0a4862c9c15bff5e5b8dfe3e1eced1592e33fbabb6a3117fd818860d37ef2f46170f2975c23ff7a4d2629cc3c5b504c2400d5ef1a';
     const result = verifyPartnerToken(partnerToken, PARTNER_SERVICES_HEX_KEY);
     expect(result).to.equal(true);
   });
