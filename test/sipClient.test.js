@@ -12,13 +12,13 @@ describe('sip Client Functions', () => {
     data: [
       {
         label: 'contact.personal.email',
-        value: 'stewart@civic.com',
+        value: 'myemail@yahoo.com',
         isValid: true,
         isOwner: true
       },
       {
         label: 'contact.personal.phoneNumber',
-        value: '+44 111222333',
+        value: '+44 555666333',
         isValid: true,
         isOwner: true
       }
@@ -42,7 +42,7 @@ describe('sip Client Functions', () => {
   it('should extract email address from userData received from authToken', () => {
     const email = sipClient.getEmailFromUserData(userData);
 
-    expect(email.value).to.equal('stewart@civic.com', 'can not get valid email from userData');
+    expect(email.value).to.equal('myemail@yahoo.com', 'can not get valid email from userData');
     expect(sipClient.getEmailFromUserData({ data: [{ label: 'some random', value: 'value' }] })).to.equal(
       undefined,
       'no valid items in array returns undefined'

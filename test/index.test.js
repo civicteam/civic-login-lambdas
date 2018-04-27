@@ -38,8 +38,6 @@ simpleExchangeCodeResponse.exchangeCode = () => ({
   userId: 'userId'
 });
 
-sandbox.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
-
 const loginHandler = handler(logger, config, (err, response) => response);
 
 const loginAndGetUserId = async token => {
@@ -68,6 +66,10 @@ const loginAndGetUserId = async token => {
 };
 
 describe('Login Handler Functions', () => {
+  before(() => {
+    sandbox.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
+  });
+
   it('login successfully given a valid authToken - new user', async () => {
     const response = await loginHandler.login(
       {
