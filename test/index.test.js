@@ -13,19 +13,11 @@ const jwt = require('../src/jwt');
 
 const authCode = uuidV4();
 
-const sandbox = sinon.createSandbox();
 const payload = {
   codeToken: authCode
 };
 
-const authResponse = jwt.createToken(
-  'civic-sip-hosted-service',
-  'hostedServices.SIPHostedService.base_url',
-  appId,
-  '10m',
-  payload,
-  'hostedServices.SIPHostedService.hexprv'
-);
+const authResponse = jwt.createToken('my-service', 'hosted-url', appId, '10m', payload, 'hosted-expiry');
 
 const event = {
   event: 'scoperequest:data-received',
@@ -34,30 +26,13 @@ const event = {
 };
 
 const sampleWarmEvent = {
-  event: 'scoperequest:data-received',
+  event: 'event',
   type: 'code',
   response: authResponse,
   source: 'serverless-plugin-warmup'
 };
 
-const scopeRequest = {
-  save: () => {},
-  update: () => {}
-};
-
-const userPartner = {
-  findByEmail: () => {},
-  delete: () => {}
-};
-
-const partner = {
-  findByDomain: () => {},
-  delete: () => {},
-  insert: () => {}
-};
-const appPartner = {
-  findByAppPartner: () => {}
-};
+const sandbox = sinon.createSandbox();
 const simpleExchangeCodeResponse = {};
 
 simpleExchangeCodeResponse.exchangeCode = () => ({
@@ -65,25 +40,9 @@ simpleExchangeCodeResponse.exchangeCode = () => ({
   userId: 'userId'
 });
 
-const samplePromise = Promise.resolve('Sample Promise');
-sandbox.stub(scopeRequest, 'save').returns(samplePromise);
-sandbox.stub(userPartner, 'findByEmail').returns({});
-sandbox.stub(userPartner, 'delete').returns({});
-sandbox.stub(partner, 'findByDomain').returns({});
-sandbox.stub(partner, 'delete').returns({});
-sandbox.stub(partner, 'insert').returns({});
-sandbox.stub(appPartner, 'findByAppPartner').returns({});
 sandbox.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
 
 const loginHandler = handler(logger, config, (err, response) => response);
-
-const validScopeRequest = {
-  authCode,
-  uuid: uuidV4(),
-  response: config.response,
-  appId,
-  browserFlowEnabled: false
-};
 
 const loginAndGetUserId = token =>
   new Promise((resolve, reject) => {
@@ -128,61 +87,6 @@ const loginAndGetUserId = token =>
   });
 
 describe('Partner Handler Functions', () => {
-  before(done => {
-    co(function*() {
-      yield scopeRequest.save(validScopeRequest);
-
-      const user2 = yield userPartner.findByEmail('savio+unittest1@civic.com');
-      if (user2) {
-        yield userPartner.delete(user2.userId);
-      }
-
-      const user = yield userPartner.findByEmail('stewart@test.com');
-      if (user) {
-        yield userPartner.delete(user.userId);
-      }
-      const user1 = yield userPartner.findByEmail('stewart@civic.com');
-      if (user1) {
-        yield userPartner.delete(user1.userId);
-      }
-      const partnerDoc = yield partner.findByDomain('test.com');
-      if (partnerDoc) {
-        yield partner.delete(partnerDoc.appId);
-        const apps = yield appPartner.findByAppPartner(partnerDoc.appId);
-        if (apps) {
-          for (let i = 0; i < apps.length; i += 1) {
-            const app = apps[i];
-            yield appPartner.delete(app.applicationId);
-          }
-        }
-      }
-
-      const partnerDoc2 = yield partner.findByDomain('civic.com');
-      if (partnerDoc2) {
-        yield partner.delete(partnerDoc2.appId);
-      }
-
-      const partnerDoc3 = yield partner.findByDomain('domaininuse.com');
-      if (partnerDoc3) {
-        yield partner.delete(partnerDoc3.appId);
-      }
-
-      yield partner.insert(
-        {
-          browserFlowEnabled: false,
-          primaryDomain: 'domaininuse.com',
-          name: 'test',
-          primaryContactName: 'John',
-          primaryContactEmail: 'someone@civic.com',
-          primaryContactPhoneNumber: '+15595496152'
-        },
-        {
-          email: 'someuser@domaininuse.com'
-        }
-      );
-    }).then(done, done);
-  });
-
   it('login successfully given a valid authToken - new user', async () => {
     await co(function*() {
       const response = yield new Promise(resolve => {
@@ -235,12 +139,6 @@ describe('Partner Handler Functions', () => {
 
   it('should login successfully given a valid authToken - existing user', done => {
     co(function*() {
-      const user = yield userPartner.findByEmail('stewart@civic.com');
-      if (!user) {
-        yield userPartner.insert({
-          email: 'stewart@civic.com'
-        });
-      }
       const response = yield new Promise(resolve => {
         loginHandler.login(
           {
