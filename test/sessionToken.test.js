@@ -6,7 +6,7 @@ const { config } = require('../assets/tests').indexTest;
 
 const sessionToken = session(config.sessionToken);
 describe('SessionToken Functions', () => {
-  it('create a valid session token', () => {
+  it('should create a valid session token', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;
@@ -16,7 +16,7 @@ describe('SessionToken Functions', () => {
     expect(sessionToken.test.verify(token, 60)).to.be.true;
   });
 
-  it('validate an expired session token', () => {
+  it('should validate an expired session token', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1s');
     expect(token).to.not.be.undefined;
@@ -26,7 +26,7 @@ describe('SessionToken Functions', () => {
     expect(sessionToken.test.verify(token, 1)).to.be.true;
   });
 
-  it('validate an session token from event', () => {
+  it('should validate an session token from event', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;
@@ -36,7 +36,7 @@ describe('SessionToken Functions', () => {
     expect(sessionToken.test.verify(token, 60)).to.be.true;
   });
 
-  it('renew an session token from event', () => {
+  it('should renew an session token from event', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
     expect(token).to.not.be.undefined;

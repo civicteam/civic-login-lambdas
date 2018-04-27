@@ -10,7 +10,7 @@ module.exports = logger => {
       body: JSON.stringify(data)
     };
 
-    callback(null, response);
+    return callback(null, response);
   };
 
   const jsonNoCors = (callback, data, statusCode, origin) => {
@@ -28,7 +28,7 @@ module.exports = logger => {
       response.headers['Access-Control-Allow-Origin'] = origin;
     }
 
-    callback(null, response);
+    return callback(null, response);
   };
 
   const error = (callback, data, statusCode) => {
@@ -64,7 +64,7 @@ module.exports = logger => {
       response.headers['Access-Control-Allow-Origin'] = origin;
     }
 
-    callback(null, response);
+    return callback(null, response);
   };
 
   const errorJson = (callback, message, statusCode = 400, error, context) => { // eslint-disable-line

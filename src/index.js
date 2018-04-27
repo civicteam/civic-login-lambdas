@@ -1,4 +1,3 @@
-const co = require('co');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
@@ -24,14 +23,14 @@ module.exports = (logger, config, authCallback) => {
    * @param {Object} context
    * @param {Function} callback
    */
-  const login = (event, context, callback) => {
+  const login = async (event, context, callback) => {
     if (event.source && event.source === 'serverless-plugin-warmup') {
       logger.info('WarmUP - Lambda is being kept warm!');
       return callback(null, 'Lambda is being kept warm!');
     }
     logger.info('event: ', event);
 
-    return co(function*() {
+    try {
       const body = JSON.parse(event.body) || {};
 
       const { authToken } = body;
@@ -43,7 +42,7 @@ module.exports = (logger, config, authCallback) => {
       let userData;
       try {
         logger.info('Token exchange for user data...');
-        userData = yield sipClient.exchangeCode(config.app, authToken);
+        userData = await sipClient.exchangeCode(config.app, authToken);
       } catch (err) {
         throw new Error(`bad token: ${err.message ? err.message : err}`);
       }
@@ -62,15 +61,10 @@ module.exports = (logger, config, authCallback) => {
       }
 
       const token = sessionToken.create(authUserId);
-
-      return {
-        sessionToken: token
-      };
-    })
-      .then(payload => {
-        response.json(callback, payload, 200);
-      })
-      .catch(err => response.errorJson(callback, err));
+      return response.json(callback, { sessionToken: token }, 200);
+    } catch (error) {
+      return response.errorJson(callback, error);
+    }
   };
 
   function getTokenFromEvent(event) {

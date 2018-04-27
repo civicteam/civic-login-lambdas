@@ -23,7 +23,7 @@ describe('Response Functions', () => {
     expect(JSON.parse(data.body).error).to.equal('sampleError');
   });
 
-  it('should parse errorJson response', () => {
+  it('should parse errorNoJson response', () => {
     errorNoCors(callback, 'sampleData', 400, 'sampleOrigin');
 
     expect(data.statusCode).to.equal(400);

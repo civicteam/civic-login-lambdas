@@ -1,5 +1,4 @@
 const { expect } = require('chai');
-const co = require('co');
 const sipClient = require('../src/sipClient');
 const { response } = require('../assets/tests.json').sipClientTest;
 
@@ -27,27 +26,20 @@ describe('sip Client Functions', () => {
     userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650'
   };
 
-  it('exchangeCode', done => {
-    co(function*() {
-      const configIn = {
-        appId: 'sampleAppId',
-        appSecret: 'sampleAppSecret',
-        prvKey: 'samplePrvKey',
-        env: '',
-        api: ''
-      };
-      const data = yield sipClient.exchangeCode(configIn, event.response);
-
-      expect(data.data).to.equal('data');
-      expect(data.userId).to.equal('userId');
-    })
-      .then(done)
-      .catch(err => {
-        done(err);
-      });
+  it('should exchangeCode', async () => {
+    const configIn = {
+      appId: 'sampleAppId',
+      appSecret: 'sampleAppSecret',
+      prvKey: 'samplePrvKey',
+      env: '',
+      api: ''
+    };
+    const data = await sipClient.exchangeCode(configIn, event.response);
+    expect(data.data).to.equal('data');
+    expect(data.userId).to.equal('userId');
   });
 
-  it('extract email address from userData received from authToken', () => {
+  it('should extract email address from userData received from authToken', () => {
     const email = sipClient.getEmailFromUserData(userData);
 
     expect(email.value).to.equal('stewart@civic.com', 'can not get valid email from userData');
@@ -60,7 +52,7 @@ describe('sip Client Functions', () => {
     expect(sipClient.getEmailFromUserData(undefined)).to.equal(undefined, 'undefined returns undefined');
   });
 
-  it('extract userId from userData', () => {
+  it('should extract userId from userData', () => {
     const userId = sipClient.getUserIdFromUserData(userData);
 
     expect(userId).to.equal(

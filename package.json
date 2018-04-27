@@ -14,7 +14,6 @@
   "license": "ISC",
   "dependencies": {
     "civic-sip-api": "civicteam/npm-civic-sip-api.git",
-    "co": "^4.6.0",
     "crypto-js": "latest",
     "json-stable-stringify": "latest",
     "jsrsasign": "latest",
