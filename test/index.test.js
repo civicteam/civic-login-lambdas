@@ -86,7 +86,7 @@ const loginAndGetUserId = token =>
       });
   });
 
-describe('Partner Handler Functions', () => {
+describe('Login Handler Functions', () => {
   it('login successfully given a valid authToken - new user', async () => {
     await co(function*() {
       const response = yield new Promise(resolve => {
