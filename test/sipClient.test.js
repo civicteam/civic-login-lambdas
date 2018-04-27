@@ -7,26 +7,34 @@ describe('sip Client Functions', () => {
   const event = {
     event: 'scoperequest:data-received',
     type: 'code',
-    response,
+    response
   };
   const userData = {
-    data: [{
-      label: 'contact.personal.email', value: 'stewart@civic.com', isValid: true, isOwner: true,
-    },
-    {
-      label: 'contact.personal.phoneNumber', value: '+44 111222333', isValid: true, isOwner: true,
-    }],
-    userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650',
+    data: [
+      {
+        label: 'contact.personal.email',
+        value: 'stewart@civic.com',
+        isValid: true,
+        isOwner: true
+      },
+      {
+        label: 'contact.personal.phoneNumber',
+        value: '+44 111222333',
+        isValid: true,
+        isOwner: true
+      }
+    ],
+    userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650'
   };
 
-  it('exchangeCode', (done) => {
-    co(function* coWrapper() {
+  it('exchangeCode', done => {
+    co(function*() {
       const configIn = {
         appId: 'sampleAppId',
         appSecret: 'sampleAppSecret',
         prvKey: 'samplePrvKey',
         env: '',
-        api: '',
+        api: ''
       };
       const data = yield sipClient.exchangeCode(configIn, event.response);
 
@@ -34,7 +42,7 @@ describe('sip Client Functions', () => {
       expect(data.userId).to.equal('userId');
     })
       .then(done)
-      .catch((err) => {
+      .catch(err => {
         done(err);
       });
   });
@@ -43,7 +51,10 @@ describe('sip Client Functions', () => {
     const email = sipClient.getEmailFromUserData(userData);
 
     expect(email.value).to.equal('stewart@civic.com', 'can not get valid email from userData');
-    expect(sipClient.getEmailFromUserData({ data: [{ label: 'some random', value: 'value' }] })).to.equal(undefined, 'no valid items in array returns undefined');
+    expect(sipClient.getEmailFromUserData({ data: [{ label: 'some random', value: 'value' }] })).to.equal(
+      undefined,
+      'no valid items in array returns undefined'
+    );
     expect(sipClient.getEmailFromUserData({ data: 'dfdfdf' })).to.equal(undefined, 'no array returns undefined');
     expect(sipClient.getEmailFromUserData({})).to.equal(undefined, 'empty object returns undefined');
     expect(sipClient.getEmailFromUserData(undefined)).to.equal(undefined, 'undefined returns undefined');
@@ -52,7 +63,10 @@ describe('sip Client Functions', () => {
   it('extract userId from userData', () => {
     const userId = sipClient.getUserIdFromUserData(userData);
 
-    expect(userId).to.equal('2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650', 'can not get valid userId from userData');
+    expect(userId).to.equal(
+      '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650',
+      'can not get valid userId from userData'
+    );
     expect(sipClient.getUserIdFromUserData({})).to.equal(undefined, 'empty object returns undefined');
     expect(sipClient.getUserIdFromUserData(undefined)).to.equal(undefined, 'undefined returns undefined');
   });

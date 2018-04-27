@@ -3,16 +3,10 @@ const winston = require('winston');
 const response = require('../src/response');
 
 describe('Response Functions', () => {
-  const {
-    error,
-    errorJson,
-    errorNoCors,
-    json,
-    jsonNoCors,
-  } = response(winston);
+  const { error, errorJson, errorNoCors, json, jsonNoCors } = response(winston);
   let data;
-  const callback = (error, response) => {
-    data = response;
+  const callback = (callbackError, callbackResponse) => {
+    data = callbackResponse;
   };
 
   it('should parse error response', () => {

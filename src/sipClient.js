@@ -5,7 +5,7 @@ const exchangeCode = (optionsIn, authToken) => {
   const options = {
     appId: optionsIn.appId,
     appSecret: optionsIn.appSecret,
-    prvKey: optionsIn.prvKey,
+    prvKey: optionsIn.prvKey
   };
 
   if (optionsIn.env !== 'prod') {
@@ -17,7 +17,7 @@ const exchangeCode = (optionsIn, authToken) => {
   return civicClient.exchangeCode(authToken);
 };
 
-const getEmailFromUserData = (userData) => {
+const getEmailFromUserData = userData => {
   if (userData && _.isArray(userData.data)) {
     return _.find(userData.data, { label: 'contact.personal.email' });
   }
@@ -30,5 +30,5 @@ const getUserIdFromUserData = userData => userData && userData.userId;
 module.exports = {
   exchangeCode,
   getEmailFromUserData,
-  getUserIdFromUserData,
+  getUserIdFromUserData
 };

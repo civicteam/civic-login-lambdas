@@ -1,24 +1,22 @@
 const { expect } = require('chai');
 const uuidV4 = require('uuid/v4');
-const handler = require('../src/index');
 const sinon = require('sinon');
 const Winston = require('winston');
 const civicSip = require('civic-sip-api');
 
-const { appId, config } = require('../assets/tests').indexTest;
-
 const logger = Winston;
 
 const co = require('co');
+const handler = require('../src/index');
+const { appId, config } = require('../assets/tests').indexTest;
 const jwt = require('../src/jwt');
 
 const authCode = uuidV4();
 
 const sandbox = sinon.createSandbox();
 const payload = {
-  codeToken: authCode,
+  codeToken: authCode
 };
-
 
 const authResponse = jwt.createToken(
   'civic-sip-hosted-service',
@@ -26,48 +24,48 @@ const authResponse = jwt.createToken(
   appId,
   '10m',
   payload,
-  'hostedServices.SIPHostedService.hexprv',
+  'hostedServices.SIPHostedService.hexprv'
 );
 
 const event = {
   event: 'scoperequest:data-received',
   type: 'code',
-  response: authResponse,
+  response: authResponse
 };
 
 const sampleWarmEvent = {
   event: 'scoperequest:data-received',
   type: 'code',
   response: authResponse,
-  source: 'serverless-plugin-warmup',
+  source: 'serverless-plugin-warmup'
 };
 
 const scopeRequest = {
   save: () => {},
-  update: () => {},
+  update: () => {}
 };
 
 const userPartner = {
   findByEmail: () => {},
-  delete: () => {},
+  delete: () => {}
 };
 
 const partner = {
   findByDomain: () => {},
   delete: () => {},
-  insert: () => {},
+  insert: () => {}
 };
 const appPartner = {
-  findByAppPartner: () => {},
+  findByAppPartner: () => {}
 };
 const simpleExchangeCodeResponse = {};
 
 simpleExchangeCodeResponse.exchangeCode = () => ({
   data: 'data',
-  userId: 'userId',
+  userId: 'userId'
 });
 
-const samplePromise = Promise.resolve(('Sample Promise'));
+const samplePromise = Promise.resolve('Sample Promise');
 sandbox.stub(scopeRequest, 'save').returns(samplePromise);
 sandbox.stub(userPartner, 'findByEmail').returns({});
 sandbox.stub(userPartner, 'delete').returns({});
@@ -84,44 +82,54 @@ const validScopeRequest = {
   uuid: uuidV4(),
   response: config.response,
   appId,
-  browserFlowEnabled: false,
+  browserFlowEnabled: false
 };
 
-const loginAndGetUserId = token => new Promise((resolve, reject) => {
-  const login = new Promise((resolveLogin) => {
-    loginHandler.login({
-      body: JSON.stringify({
-        authToken: token,
-      }),
-    }, {}, (err, response) => {
-      resolveLogin(response);
+const loginAndGetUserId = token =>
+  new Promise((resolve, reject) => {
+    const login = new Promise(resolveLogin => {
+      loginHandler.login(
+        {
+          body: JSON.stringify({
+            authToken: token
+          })
+        },
+        {},
+        (err, response) => {
+          resolveLogin(response);
+        }
+      );
     });
-  });
 
-  login.then((val) => {
-    const authResp = new Promise((resolveAuth) => {
-      loginHandler.sessionAuthorizer({
-        authorizationToken: JSON.parse(val.body).sessionToken,
-      }, {}, (err, response) => {
-        resolveAuth(response);
+    login
+      .then(val => {
+        const authResp = new Promise(resolveAuth => {
+          loginHandler.sessionAuthorizer(
+            {
+              authorizationToken: JSON.parse(val.body).sessionToken
+            },
+            {},
+            (err, response) => {
+              resolveAuth(response);
+            }
+          );
+        });
+
+        authResp.then(authResVal => {
+          resolve({
+            userId: authResVal.context.userId,
+            sessionToken: JSON.parse(val.body).sessionToken
+          });
+        });
+      })
+      .catch(err => {
+        reject(err);
       });
-    });
-
-    authResp.then((authResVal) => {
-      resolve({
-        userId: authResVal.context.userId,
-        sessionToken: JSON.parse(val.body).sessionToken,
-      });
-    });
-  }).catch((err) => {
-    reject(err);
   });
-});
-
 
 describe('Partner Handler Functions', () => {
-  before((done) => {
-    co(function* coWrapper() {
+  before(done => {
+    co(function*() {
       yield scopeRequest.save(validScopeRequest);
 
       const user2 = yield userPartner.findByEmail('savio+unittest1@civic.com');
@@ -159,29 +167,36 @@ describe('Partner Handler Functions', () => {
         yield partner.delete(partnerDoc3.appId);
       }
 
-      yield partner.insert({
-        browserFlowEnabled: false,
-        primaryDomain: 'domaininuse.com',
-        name: 'test',
-        primaryContactName: 'John',
-        primaryContactEmail: 'someone@civic.com',
-        primaryContactPhoneNumber: '+15595496152',
-      }, {
-        email: 'someuser@domaininuse.com',
-      });
+      yield partner.insert(
+        {
+          browserFlowEnabled: false,
+          primaryDomain: 'domaininuse.com',
+          name: 'test',
+          primaryContactName: 'John',
+          primaryContactEmail: 'someone@civic.com',
+          primaryContactPhoneNumber: '+15595496152'
+        },
+        {
+          email: 'someuser@domaininuse.com'
+        }
+      );
     }).then(done, done);
   });
 
   it('login successfully given a valid authToken - new user', async () => {
-    await co(function* coWrapper() {
-      const response = yield new Promise((resolve) => {
-        loginHandler.login({
-          body: JSON.stringify({
-            authToken: event.response,
-          }),
-        }, {}, (err, res) => {
-          resolve(res);
-        });
+    await co(function*() {
+      const response = yield new Promise(resolve => {
+        loginHandler.login(
+          {
+            body: JSON.stringify({
+              authToken: event.response
+            })
+          },
+          {},
+          (err, res) => {
+            resolve(res);
+          }
+        );
       });
       expect(response.statusCode).to.equal(200);
       expect(JSON.parse(response.body)).to.be.an('object');
@@ -189,9 +204,9 @@ describe('Partner Handler Functions', () => {
     });
   });
 
-  it('keep lambda warm with source event', async () => {
-    await co(function* coWrapper() {
-      const response = yield new Promise((resolve) => {
+  it('should keep lambda warm with source event', async () => {
+    await co(function*() {
+      const response = yield new Promise(resolve => {
         loginHandler.login(sampleWarmEvent, {}, (err, res) => {
           resolve(res);
         });
@@ -200,37 +215,44 @@ describe('Partner Handler Functions', () => {
     });
   });
 
-  it('reject login with no auth Token', async () => {
-    await co(function* coWrapper() {
-      const response = yield new Promise((resolve) => {
-        loginHandler.login({
-          body: JSON.stringify({
-          }),
-        }, {}, (err, res) => {
-          resolve(res);
-        });
+  it('should reject login with no auth Token', async () => {
+    await co(function*() {
+      const response = yield new Promise(resolve => {
+        loginHandler.login(
+          {
+            body: JSON.stringify({})
+          },
+          {},
+          (err, res) => {
+            resolve(res);
+          }
+        );
       });
       expect(response.statusCode).to.equal(400);
       expect(JSON.parse(response.body).message).to.equal('no authToken provided');
     });
   });
 
-  it('login successfully given a valid authToken - existing user', (done) => {
-    co(function* coWrapper() {
+  it('should login successfully given a valid authToken - existing user', done => {
+    co(function*() {
       const user = yield userPartner.findByEmail('stewart@civic.com');
       if (!user) {
         yield userPartner.insert({
-          email: 'stewart@civic.com',
+          email: 'stewart@civic.com'
         });
       }
-      const response = yield new Promise((resolve) => {
-        loginHandler.login({
-          body: JSON.stringify({
-            authToken: event.response,
-          }),
-        }, {}, (err, res) => {
-          resolve(res);
-        });
+      const response = yield new Promise(resolve => {
+        loginHandler.login(
+          {
+            body: JSON.stringify({
+              authToken: event.response
+            })
+          },
+          {},
+          (err, res) => {
+            resolve(res);
+          }
+        );
       });
       expect(response.statusCode).to.equal(200);
       expect(JSON.parse(response.body)).to.be.an('object');
@@ -238,21 +260,25 @@ describe('Partner Handler Functions', () => {
     }).then(done, done);
   });
 
-  it('renew a valid sessionToken', async () => {
+  it('show renew a valid sessionToken', async () => {
     const login = await loginAndGetUserId(event.response);
-    const keepAliveWrapper = new Promise((resolve) => {
-      loginHandler.keepAlive({
-        headers: {
-          Authorization: login.sessionToken,
-        },
-        requestContext: {
-          authorizer: {
-            userId: login.userId,
+    const keepAliveWrapper = new Promise(resolve => {
+      loginHandler.keepAlive(
+        {
+          headers: {
+            Authorization: login.sessionToken
           },
+          requestContext: {
+            authorizer: {
+              userId: login.userId
+            }
+          }
         },
-      }, {}, (err, response) => {
-        resolve(response);
-      });
+        {},
+        (err, response) => {
+          resolve(response);
+        }
+      );
     });
     const keepAlive = await keepAliveWrapper;
     expect(keepAlive.statusCode).to.equal(200);
@@ -261,20 +287,24 @@ describe('Partner Handler Functions', () => {
     expect(JSON.parse(keepAlive.body).sessionToken).to.be.not.equal(login.sessionToken);
   });
 
-  it('renew a without sessionToken', async () => {
-    const keepAliveWrapper = new Promise((resolve) => {
-      loginHandler.keepAlive({
-        headers: {
-          Authorization: '',
-        },
-        requestContext: {
-          authorizer: {
-            userId: '',
+  it('should not renew a without sessionToken', async () => {
+    const keepAliveWrapper = new Promise(resolve => {
+      loginHandler.keepAlive(
+        {
+          headers: {
+            Authorization: ''
           },
+          requestContext: {
+            authorizer: {
+              userId: ''
+            }
+          }
         },
-      }, {}, (err, response) => {
-        resolve(response);
-      });
+        {},
+        (err, response) => {
+          resolve(response);
+        }
+      );
     });
     const keepAlive = await keepAliveWrapper;
     expect(keepAlive.statusCode).to.equal(401);

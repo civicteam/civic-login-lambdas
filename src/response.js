@@ -1,15 +1,13 @@
-module.exports = (logger) => {
+module.exports = logger => {
   const json = (callback, data, statusCode) => {
-    // TODO: may have to do this - if returning json or non-html data, then return the HTML wrapped in JSON to preserve encoding
-    // callback(null, { data: html });
     const response = {
       statusCode,
       headers: {
         'Access-Control-Allow-Origin': '*', // Required for CORS support to work
         'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     };
 
     callback(null, response);
@@ -20,9 +18,9 @@ module.exports = (logger) => {
       statusCode,
       headers: {
         'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     };
 
     // allow for specific origins if provided
@@ -40,7 +38,7 @@ module.exports = (logger) => {
     }
     const response = {
       statusCode,
-      body,
+      body
     };
 
     logger.error('Error: ', JSON.stringify(response));
@@ -54,9 +52,9 @@ module.exports = (logger) => {
       statusCode,
       headers: {
         'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify(data),
+      body: JSON.stringify(data)
     };
 
     logger.error(JSON.stringify(response));
@@ -69,12 +67,12 @@ module.exports = (logger) => {
     callback(null, response);
   };
 
-  const errorJson = (callback, message, statusCode = 400, error, context) => {
+  const errorJson = (callback, message, statusCode = 400, error, context) => { // eslint-disable-line
     logger.error(message);
     const data = {
       statusCode,
       message,
-      error,
+      error
     };
     if (typeof message === 'object') {
       data.message = message.message;
@@ -92,6 +90,6 @@ module.exports = (logger) => {
     errorJson,
     errorNoCors,
     json,
-    jsonNoCors,
+    jsonNoCors
   };
 };

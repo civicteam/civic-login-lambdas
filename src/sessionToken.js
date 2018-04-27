@@ -8,14 +8,22 @@ module.exports = (sessionConfig, logger) => {
   const create = (userId, expiration = JWT_EXPIRATION) => {
     const payload = {
       sessionId: uuidV4(),
-      userId,
+      userId
     };
-    return jwt.createToken(sessionConfig.issuer, sessionConfig.audience, sessionConfig.subject, expiration, payload, sessionConfig.prvKey);
+    return jwt.createToken(
+      sessionConfig.issuer,
+      sessionConfig.audience,
+      sessionConfig.subject,
+      expiration,
+      payload,
+      sessionConfig.prvKey
+    );
   };
 
-  const verify = (jwToken, gracePeriod = JWT_GRACE_PERIOD) => jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
+  const verify = (jwToken, gracePeriod = JWT_GRACE_PERIOD) =>
+    jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
 
-  const validate = (token) => {
+  const validate = token => {
     if (!token || !verify(token)) {
       logger.warn('Validate: No token found or token unverified - ', token);
       return false;
@@ -37,7 +45,7 @@ module.exports = (sessionConfig, logger) => {
     return create(userId, expiration);
   };
 
-  const validateFromEvent = (event) => {
+  const validateFromEvent = event => {
     if (!event || !event.headers || !event.headers.Authorization) {
       return false;
     }
@@ -46,7 +54,7 @@ module.exports = (sessionConfig, logger) => {
     return validate(token);
   };
 
-  const keepAliveFromEvent = (event) => {
+  const keepAliveFromEvent = event => {
     if (!event || !event.headers) {
       return false;
     }
@@ -63,7 +71,7 @@ module.exports = (sessionConfig, logger) => {
     keepAliveFromEvent,
     // unit testing only
     test: {
-      verify,
-    },
+      verify
+    }
   };
 };

@@ -24,19 +24,25 @@
     "uuid": "latest"
   },
   "devDependencies": {
-    "winston": "^2.4.2",
-    "sinon": "^4.5.0",
-    "mocha": "^5.1.1",
-    "nyc": "^11.7.1",
+    "babel-eslint": "^8.2.3",
     "chai": "^4.1.2",
     "cross-env": "^5.1.4",
     "crypto-js": "latest",
     "eslint": "^4.19.1",
     "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-babel": "^5.0.0",
     "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-import-order-autofix": "^0.8.3",
     "eslint-plugin-jsx-a11y": "^6.0.3",
-    "json-stable-stringify": "latest"
+    "eslint-plugin-named-unassigned-functions": "0.0.2",
+    "eslint-plugin-prettier": "^2.6.0",
+    "json-stable-stringify": "latest",
+    "mocha": "^5.1.1",
+    "nyc": "^11.7.1",
+    "prettier": "^1.12.1",
+    "sinon": "^4.5.0",
+    "winston": "^2.4.2"
   },
   "nyc": {
     "lines": 80,
@@ -51,40 +57,55 @@
     ]
   },
   "eslintConfig": {
-    "extends": "airbnb-base",
+    "extends": [
+      "airbnb-base",
+      "plugin:prettier/recommended"
+    ],
+    "plugins": [
+      "import-order-autofix",
+      "prettier",
+      "named-unassigned-functions"
+    ],
     "env": {
-      "mocha": true,
       "node": true,
-      "browser": true
+      "mocha": true
+    },
+    "globals": {
+      "artifacts": true
     },
     "rules": {
       "max-len": [
-        "warn",
-        200
-      ],
-      "import/no-extraneous-dependencies": [
         "error",
         {
-          "devDependencies": [
-            "**/test/*.js"
-          ]
+          "code": 120
         }
       ],
-      "no-plusplus": "warn",
-      "no-shadow": [
-        2,
+      "no-console": "off",
+      "func-names": [
+        "warn",
+        "never"
+      ],
+      "no-plusplus": [
+        "error",
         {
-          "builtinGlobals": false,
-          "hoist": "functions",
-          "allow": [
-            "response",
-            "error"
-          ]
+          "allowForLoopAfterthoughts": true
         }
       ],
-      "consistent-return": 1,
-      "no-param-reassign": 0,
-      "one-var": 0
+      "no-use-before-define": [
+        "error",
+        {
+          "functions": false,
+          "classes": true
+        }
+      ],
+      "prettier/prettier": [
+        "error",
+        {
+          "printWidth": 120,
+          "singleQuote": true
+        }
+      ],
+      "import-order-autofix/order": "error"
     }
   }
 }

@@ -17,8 +17,8 @@ module.exports = (logger, config, authCallback) => {
    *
    * @apiParamExample {json} example:
    *     {
- *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
- *     }
+   *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
+   *     }
    *
    * @param {Object} event
    * @param {Object} context
@@ -31,7 +31,7 @@ module.exports = (logger, config, authCallback) => {
     }
     logger.info('event: ', event);
 
-    return co(function* coWrapper() {
+    return co(function*() {
       const body = JSON.parse(event.body) || {};
 
       const { authToken } = body;
@@ -64,11 +64,13 @@ module.exports = (logger, config, authCallback) => {
       const token = sessionToken.create(authUserId);
 
       return {
-        sessionToken: token,
+        sessionToken: token
       };
-    }).then((payload) => {
-      response.json(callback, payload, 200);
-    }).catch(err => response.errorJson(callback, err));
+    })
+      .then(payload => {
+        response.json(callback, payload, 200);
+      })
+      .catch(err => response.errorJson(callback, err));
   };
 
   function getTokenFromEvent(event) {
@@ -90,8 +92,8 @@ module.exports = (logger, config, authCallback) => {
    * @apiSuccessExample {json} Success-Response:
    *     HTTP/1.1 200 OK
    *     {
- *       "sessionToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
- *     }
+   *       "sessionToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
+   *     }
    *
    * @param {Object} event
    * @param {Object} context
@@ -107,27 +109,35 @@ module.exports = (logger, config, authCallback) => {
     try {
       const token = getTokenFromEvent(event);
 
-      return response.json(callback, {
-        sessionToken: token,
-      }, 200);
+      return response.json(
+        callback,
+        {
+          sessionToken: token
+        },
+        200
+      );
     } catch (err) {
       return response.errorJson(callback, 'Unauthorized', 401);
     }
   };
 
+  /* http://docs.aws.amazon.com/apigateway/latest/developerguide
+  /use-custom-authorizer.html#api-gateway-custom-authorizer-lambda-function-create */
   const generatePolicy = (principalId, effect, resource) => {
     const authResponse = {
-      principalId,
+      principalId
     };
 
     if (effect && resource) {
       authResponse.policyDocument = {
         Version: '2012-10-17', // default version
-        Statement: [{
-          Action: 'execute-api:Invoke', // default action
-          Effect: effect,
-          Resource: resource,
-        }],
+        Statement: [
+          {
+            Action: 'execute-api:Invoke', // default action
+            Effect: effect,
+            Resource: resource
+          }
+        ]
       };
     }
 
@@ -155,18 +165,15 @@ module.exports = (logger, config, authCallback) => {
     }
     const authResponse = generatePolicy('user', 'Allow', event.methodArn);
     authResponse.context = {
-      userId,
+      userId
     };
     return callback(null, authResponse);
   };
-
-  // http://docs.aws.amazon.com/apigateway/latest/developerguide/use-custom-authorizer.html#api-gateway-custom-authorizer-lambda-function-create
-
 
   return {
     login,
     keepAlive,
     sessionAuthorizer,
-    sipClient,
+    sipClient
   };
 };
