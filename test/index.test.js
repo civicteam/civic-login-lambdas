@@ -17,12 +17,6 @@ const payload = {
 
 const authResponse = jwt.createToken('my-service', 'hosted-url', appId, '10m', payload, 'hosted-expiry');
 
-const event = {
-  event: 'scoperequest:data-received',
-  type: 'code',
-  response: authResponse
-};
-
 const sampleWarmEvent = {
   event: 'event',
   type: 'code',
@@ -74,7 +68,7 @@ describe('Login Handler Functions', () => {
     const response = await loginHandler.login(
       {
         body: JSON.stringify({
-          authToken: event.response
+          authToken: authResponse
         })
       },
       {},
@@ -106,7 +100,7 @@ describe('Login Handler Functions', () => {
     const response = await loginHandler.login(
       {
         body: JSON.stringify({
-          authToken: event.response
+          authToken: authResponse
         })
       },
       {},
@@ -118,7 +112,7 @@ describe('Login Handler Functions', () => {
   });
 
   it('show renew a valid sessionToken', async () => {
-    const login = await loginAndGetUserId(event.response);
+    const login = await loginAndGetUserId(authResponse);
     const keepAliveWrapper = new Promise(resolve => {
       loginHandler.keepAlive(
         {

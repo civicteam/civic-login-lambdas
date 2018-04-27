@@ -1,3 +1,4 @@
+const co = require('co');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
@@ -30,7 +31,7 @@ module.exports = (logger, config, authCallback) => {
     }
     logger.info('event: ', event);
 
-    try {
+    return co(function*() {
       const body = JSON.parse(event.body) || {};
 
       const { authToken } = body;
@@ -42,7 +43,7 @@ module.exports = (logger, config, authCallback) => {
       let userData;
       try {
         logger.info('Token exchange for user data...');
-        userData = await sipClient.exchangeCode(config.app, authToken);
+        userData = yield sipClient.exchangeCode(config.app, authToken);
       } catch (err) {
         throw new Error(`bad token: ${err.message ? err.message : err}`);
       }
@@ -55,16 +56,19 @@ module.exports = (logger, config, authCallback) => {
 
       if (authCallback) {
         const failureReason = authCallback(userData);
-        if (failureReason) {
+        if (failureReason != null) {
           throw new Error(`Access Denied: ${failureReason}`);
         }
       }
 
       const token = sessionToken.create(authUserId);
-      return response.json(callback, { sessionToken: token }, 200);
-    } catch (error) {
-      return response.errorJson(callback, error);
-    }
+
+      return {
+        sessionToken: token
+      };
+    })
+      .then(payload => response.json(callback, payload, 200))
+      .catch(err => response.errorJson(callback, err));
   };
 
   function getTokenFromEvent(event) {
