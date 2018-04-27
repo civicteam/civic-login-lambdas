@@ -53,10 +53,12 @@ module.exports = (logger, config, authCallback) => {
       }
 
       const authUserId = sipClient.getUserIdFromUserData(userData);
-      authCallback = authCallback || (() => null);
-      const failureReason = authCallback(userData);
-      if (failureReason) {
-        throw new Error(`Access Denied: ${failureReason}`);
+
+      if (authCallback) {
+        const failureReason = authCallback(userData);
+        if (failureReason) {
+          throw new Error(`Access Denied: ${failureReason}`);
+        }
       }
 
       const token = sessionToken.create(authUserId);
