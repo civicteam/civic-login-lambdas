@@ -3,7 +3,7 @@ const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-module.exports = (logger, config, authCallback) => {
+module.exports = (logger, config, authCallback, exchangeCodeCallback, partnerCallback) => {
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
@@ -43,7 +43,7 @@ module.exports = (logger, config, authCallback) => {
       let userData;
       try {
         logger.info('Token exchange for user data...');
-        userData = yield sipClient.exchangeCode(config.app, authToken);
+        userData = yield exchangeCodeCallback(config.app, authToken);
       } catch (err) {
         throw new Error(`bad token: ${err.message ? err.message : err}`);
       }
@@ -59,6 +59,10 @@ module.exports = (logger, config, authCallback) => {
         if (failureReason != null) {
           throw new Error(`Access Denied: ${failureReason}`);
         }
+      }
+
+      if (partnerCallback) {
+        return yield partnerCallback(event, body, authUserId, userData);
       }
 
       const token = sessionToken.create(authUserId);
