@@ -3,7 +3,7 @@ const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-module.exports = (logger, config, authCallback, partnerCallback) => {
+module.exports = (logger, config, authCallback, partnerPortalLoginCallback) => {
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
@@ -61,8 +61,8 @@ module.exports = (logger, config, authCallback, partnerCallback) => {
         }
       }
 
-      if (partnerCallback) {
-        return yield partnerCallback(event, body, authUserId, userData);
+      if (partnerPortalLoginCallback) {
+        return yield partnerPortalLoginCallback(event, body, authUserId, userData);
       }
 
       const token = sessionToken.create(authUserId);
