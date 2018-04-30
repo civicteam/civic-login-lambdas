@@ -24,7 +24,7 @@ module.exports = (logger, config, authCallback, loginCallback) => {
    * @param {Object} context
    * @param {Function} callback
    */
-  const login = async (event, context, callback) => {
+  const login = (event, context, callback) => {
     if (event.source && event.source === 'serverless-plugin-warmup') {
       logger.info('WarmUP - Lambda is being kept warm!');
       return callback(null, 'Lambda is being kept warm!');
