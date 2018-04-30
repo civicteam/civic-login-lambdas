@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 const uuidV4 = require('uuid/v4');
 const jwt = require('./jwt');
 

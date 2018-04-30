@@ -1,4 +1,3 @@
-/* eslint-disable max-len  */
 const { expect } = require('chai');
 const jwt = require('../src/jwt');
 
