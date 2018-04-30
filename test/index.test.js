@@ -138,7 +138,7 @@ describe('Login Handler Functions', () => {
     expect(JSON.parse(keepAlive.body).sessionToken).to.be.not.equal(login.sessionToken);
   });
 
-  it('should not renew a without sessionToken', async () => {
+  it('should not renew a missing session token', async () => {
     const keepAliveWrapper = loginHandler.keepAlive(
       {
         headers: {
