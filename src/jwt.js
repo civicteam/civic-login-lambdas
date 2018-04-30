@@ -1,15 +1,10 @@
 const rs = require('jsrsasign');
-const jwtjs = require('jwt-js');
 const uuidV4 = require('uuid/v4');
 const timestamp = require('unix-timestamp');
-const CryptoJS = require('crypto-js');
-const stringify = require('json-stable-stringify');
 const _ = require('lodash');
 
 const ALGO = 'ES256';
 const CURVE = 'secp256r1';
-
-const ALGO_BTC = 'ES256k';
 
 /**
  * Using secp256r1 ECC curve for key pair generation for use in
@@ -29,7 +24,7 @@ exports.createToken = (issuer, audience, subject, expiresIn, payload, prvKeyHex)
     iss: issuer,
     aud: audience,
     sub: subject,
-    data: payload,
+    data: payload
   };
 
   const header = { alg: ALGO, typ: 'JWT' };
@@ -79,50 +74,3 @@ exports.verify = (token, pubhex, acceptable) => {
 };
 
 exports.decode = token => rs.jws.JWS.parse(token);
-
-exports.createCivicExt = (body, clientAccessSecret) => {
-  const bodyStr = stringify(body);
-  const hmacBuffer = CryptoJS.HmacSHA256(bodyStr, clientAccessSecret);
-  return CryptoJS.enc.Base64.stringify(hmacBuffer);
-};
-
-/**
- * Used to create a jwt token for the callback url response. This is used only for callback url calls (getScopeRequestCallback)
- * made to the sip-hosted-service. This token is returned with the scopeRequestBody and the app uses the token to ensure
- * the integrity of the returned data and that it comes from the civic-sip-partner-service.
- *
- * The token uses the ES256k bitcoin curve to be compatible with the signing curves used on the phone app.
- *
- * Partners that provide their own callbackURL endpoint will include their partner attestation for validation purposes.
- *
- * @param issuer
- * @param audience
- * @param subject
- * @param expiresIn
- * @param payload
- * @param prvKeyHex
- * @returns {number|*}
- */
-exports.createPartnerToken = (issuer, audience, subject, expiresIn, payload, prvKeyHex) => {
-  const now = timestamp.now();
-  const until = timestamp.add(now, expiresIn);
-
-  const content = {
-    jti: uuidV4(),
-    iat: now,
-    exp: until,
-    iss: issuer,
-    aud: audience,
-    sub: subject,
-    data: payload,
-  };
-
-  const signer = new jwtjs.TokenSigner(ALGO_BTC, prvKeyHex);
-
-  return signer.sign(content);
-};
-
-exports.verifyPartnerToken = (token, pubhex) => {
-  const verifier = new jwtjs.TokenVerifier(ALGO_BTC, pubhex);
-  return verifier.verify(token);
-};

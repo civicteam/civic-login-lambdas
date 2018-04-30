@@ -4,21 +4,28 @@ const jwt = require('./jwt');
 const JWT_EXPIRATION = '10m'; // 10 minutes
 const JWT_GRACE_PERIOD = 60; // 1 minutes
 
-module.exports = (sessionConfig) => {
-
+module.exports = (sessionConfig, logger) => {
   const create = (userId, expiration = JWT_EXPIRATION) => {
     const payload = {
       sessionId: uuidV4(),
-      userId,
+      userId
     };
-    return jwt.createToken(sessionConfig.issuer, sessionConfig.audience, sessionConfig.subject, expiration, payload, sessionConfig.prvKey);
+    return jwt.createToken(
+      sessionConfig.issuer,
+      sessionConfig.audience,
+      sessionConfig.subject,
+      expiration,
+      payload,
+      sessionConfig.prvKey
+    );
   };
 
-  const verify = (jwToken, gracePeriod = JWT_GRACE_PERIOD) => jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
+  const verify = (jwToken, gracePeriod = JWT_GRACE_PERIOD) =>
+    jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
 
-  const validate = (token) => {
+  const validate = token => {
     if (!token || !verify(token)) {
-      console.warn('Validate: No token found or token unverified - ', token);
+      logger.warn('Validate: No token found or token unverified - ', token);
       return false;
     }
     const decoded = jwt.decode(token);
@@ -26,7 +33,7 @@ module.exports = (sessionConfig) => {
     if (decoded && decoded.payloadObj && decoded.payloadObj.data) {
       return decoded.payloadObj.data.userId;
     }
-    console.warn('Validate decode: payload not decoded - ', decoded);
+    logger.warn('Validate decode: payload not decoded - ', decoded);
     return false;
   };
 
@@ -38,7 +45,7 @@ module.exports = (sessionConfig) => {
     return create(userId, expiration);
   };
 
-  const validateFromEvent = (event) => {
+  const validateFromEvent = event => {
     if (!event || !event.headers || !event.headers.Authorization) {
       return false;
     }
@@ -47,7 +54,7 @@ module.exports = (sessionConfig) => {
     return validate(token);
   };
 
-  const keepAliveFromEvent = (event) => {
+  const keepAliveFromEvent = event => {
     if (!event || !event.headers) {
       return false;
     }
@@ -64,7 +71,7 @@ module.exports = (sessionConfig) => {
     keepAliveFromEvent,
     // unit testing only
     test: {
-      verify,
-    },
+      verify
+    }
   };
-}
+};

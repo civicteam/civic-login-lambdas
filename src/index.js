@@ -1,12 +1,11 @@
 const co = require('co');
-const _ = require('lodash');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
 module.exports = (logger, config, authCallback) => {
   const response = responseFactory(logger);
-  const sessionToken = sessionTokenFactory(config.sessionToken);
+  const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
   /**
    * @api {post} admin/login  /../login (POST)
@@ -18,21 +17,21 @@ module.exports = (logger, config, authCallback) => {
    *
    * @apiParamExample {json} example:
    *     {
- *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
- *     }
+   *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
+   *     }
    *
    * @param {Object} event
    * @param {Object} context
    * @param {Function} callback
    */
-  const login = (event, context, callback) => {
+  const login = async (event, context, callback) => {
     if (event.source && event.source === 'serverless-plugin-warmup') {
       logger.info('WarmUP - Lambda is being kept warm!');
       return callback(null, 'Lambda is being kept warm!');
     }
     logger.info('event: ', event);
 
-    return co(function* coWrapper() {
+    return co(function*() {
       const body = JSON.parse(event.body) || {};
 
       const { authToken } = body;
@@ -56,39 +55,20 @@ module.exports = (logger, config, authCallback) => {
       const authUserId = sipClient.getUserIdFromUserData(userData);
 
       if (authCallback) {
-        let failureReason = authCallback(userData);
+        const failureReason = authCallback(userData);
         if (failureReason != null) {
-          throw new Error('Access Denied: ' + failureReason);
+          throw new Error(`Access Denied: ${failureReason}`);
         }
       }
-
-      //TODO needed?
-      /*
-      let userPartnerDoc = yield userPartner.findByEmail(email.value);
-
-      if (!userPartnerDoc) {
-        logger.info(`No item found for partner user, inserting by email: ${email.value}`);
-        userPartnerDoc = yield userPartner.insert({
-          email: email.value,
-          authUserId,
-          role: userPartner.userRoles.OWNER,
-          status: userPartner.userStatuses.ACTIVE,
-        }, null, null, getTrackMetaInfo(event));
-
-        if (!userPartnerDoc) {
-          throw new Error('user partner insert failed');
-        }
-      }
-      */
 
       const token = sessionToken.create(authUserId);
 
       return {
-        sessionToken: token,
+        sessionToken: token
       };
-    }).then((payload) => {
-      response.json(callback, payload, 200);
-    }).catch(err => response.errorJson(callback, err));
+    })
+      .then(payload => response.json(callback, payload, 200))
+      .catch(err => response.errorJson(callback, err));
   };
 
   function getTokenFromEvent(event) {
@@ -110,8 +90,8 @@ module.exports = (logger, config, authCallback) => {
    * @apiSuccessExample {json} Success-Response:
    *     HTTP/1.1 200 OK
    *     {
- *       "sessionToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
- *     }
+   *       "sessionToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
+   *     }
    *
    * @param {Object} event
    * @param {Object} context
@@ -127,12 +107,39 @@ module.exports = (logger, config, authCallback) => {
     try {
       const token = getTokenFromEvent(event);
 
-      return response.json(callback, {
-        sessionToken: token,
-      }, 200);
+      return response.json(
+        callback,
+        {
+          sessionToken: token
+        },
+        200
+      );
     } catch (err) {
       return response.errorJson(callback, 'Unauthorized', 401);
     }
+  };
+
+  /* http://docs.aws.amazon.com/apigateway/latest/developerguide
+  /use-custom-authorizer.html#api-gateway-custom-authorizer-lambda-function-create */
+  const generatePolicy = (principalId, effect, resource) => {
+    const authResponse = {
+      principalId
+    };
+
+    if (effect && resource) {
+      authResponse.policyDocument = {
+        Version: '2012-10-17', // default version
+        Statement: [
+          {
+            Action: 'execute-api:Invoke', // default action
+            Effect: effect,
+            Resource: resource
+          }
+        ]
+      };
+    }
+
+    return authResponse;
   };
 
   const sessionAuthorizer = (event, context, callback) => {
@@ -156,29 +163,9 @@ module.exports = (logger, config, authCallback) => {
     }
     const authResponse = generatePolicy('user', 'Allow', event.methodArn);
     authResponse.context = {
-      userId,
+      userId
     };
     return callback(null, authResponse);
-  };
-
-  // http://docs.aws.amazon.com/apigateway/latest/developerguide/use-custom-authorizer.html#api-gateway-custom-authorizer-lambda-function-create
-  const generatePolicy = (principalId, effect, resource) => {
-    const authResponse = {
-      principalId,
-    };
-
-    if (effect && resource) {
-      authResponse.policyDocument = {
-        Version: '2012-10-17', // default version
-        Statement: [{
-          Action: 'execute-api:Invoke', // default action
-          Effect: effect,
-          Resource: resource,
-        }],
-      };
-    }
-
-    return authResponse;
   };
 
   return {

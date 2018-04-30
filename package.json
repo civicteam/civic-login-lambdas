@@ -4,19 +4,107 @@
   "description": "Integrate civic login in serverless applications",
   "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cross-env NODE_ENV=test nyc --reporter=none mocha",
+    "coverage": "cross-env FORCE_COLOR=1 nyc report && nyc check-coverage",
+    "lint": "eslint --max-warnings=0 .",
+    "lint-autofix": "eslint --fix .",
+    "ci": "npm run test && npm run coverage && npm run lint"
   },
   "author": "Daniel Kelleher",
   "license": "ISC",
   "dependencies": {
-    "co": "^4.6.0",
-    "lodash": "^4.17.5",
     "civic-sip-api": "civicteam/npm-civic-sip-api.git",
+    "co": "^4.6.0",
+    "json-stable-stringify": "latest",
     "jsrsasign": "latest",
-    "uuid": "latest",
     "jwt-js": "latest",
+    "lodash": "^4.17.5",
     "unix-timestamp": "latest",
-    "crypto-js": "latest",
-    "json-stable-stringify": "latest"
-  }
+    "uuid": "latest"
+  },
+  "devDependencies": {
+    "babel-eslint": "^8.2.3",
+    "chai": "^4.1.2",
+    "cross-env": "^5.1.4",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-babel": "^5.0.0",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-import-order-autofix": "^0.8.3",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-named-unassigned-functions": "0.0.2",
+    "eslint-plugin-prettier": "^2.6.0",
+    "json-stable-stringify": "latest",
+    "mocha": "^5.1.1",
+    "nyc": "^11.7.1",
+    "prettier": "^1.12.1",
+    "sinon": "^4.5.0",
+    "winston": "^2.4.2"
+  },
+  "nyc": {
+    "lines": 80,
+    "statements": 80,
+    "functions": 80,
+    "branches": 70,
+    "exclude": [
+      "test/*"
+    ],
+    "include": [
+      "./src/*"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "airbnb-base",
+      "plugin:prettier/recommended"
+    ],
+    "plugins": [
+      "import-order-autofix",
+      "prettier",
+      "named-unassigned-functions"
+    ],
+    "env": {
+      "node": true,
+      "mocha": true
+    },
+    "globals": {
+      "artifacts": true
+    },
+    "rules": {
+      "max-len": [
+        "error",
+        {
+          "code": 120
+        }
+      ],
+      "no-console": "off",
+      "func-names": [
+        "warn",
+        "never"
+      ],
+      "no-plusplus": [
+        "error",
+        {
+          "allowForLoopAfterthoughts": true
+        }
+      ],
+      "no-use-before-define": [
+        "error",
+        {
+          "functions": false,
+          "classes": true
+        }
+      ],
+      "prettier/prettier": [
+        "error",
+        {
+          "printWidth": 120,
+          "singleQuote": true
+        }
+      ],
+      "import-order-autofix/order": "error"
+    }
+  },
+  "eslintIgnore": ["/node_modules/*"]
 }
