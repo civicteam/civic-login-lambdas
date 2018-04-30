@@ -10,6 +10,7 @@ const { appId, config } = require('../assets/tests').indexTest;
 const jwt = require('../src/jwt');
 
 const authCode = uuidV4();
+
 const payload = {
   codeToken: authCode
 };

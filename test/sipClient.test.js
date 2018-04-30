@@ -1,4 +1,3 @@
-/* eslint-disable max-len  */
 const { expect } = require('chai');
 const sipClient = require('../src/sipClient');
 const { response } = require('../assets/tests.json').sipClientTest;

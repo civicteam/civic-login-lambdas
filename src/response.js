@@ -90,6 +90,6 @@ module.exports = logger => {
     errorJson,
     errorNoCors,
     json,
-    jsonNoCors,
+    jsonNoCors
   };
 };
