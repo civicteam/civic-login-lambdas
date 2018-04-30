@@ -40,7 +40,8 @@
     "nyc": "^11.7.1",
     "prettier": "^1.12.1",
     "sinon": "^4.5.0",
-    "winston": "^2.4.2"
+    "winston": "^2.4.2",
+    "snyk": "^1.73.0"
   },
   "nyc": {
     "lines": 80,
@@ -106,5 +107,7 @@
       "import-order-autofix/order": "error"
     }
   },
-  "eslintIgnore": ["/node_modules/*"]
+  "eslintIgnore": [
+    "/node_modules/*"
+  ]
 }
