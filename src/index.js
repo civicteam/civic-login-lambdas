@@ -43,7 +43,7 @@ module.exports = (logger, config, authCallback, partnerCallback) => {
       let userData;
       try {
         logger.info('Token exchange for user data...');
-        userData = yield sipClient.exchangeCode(config.app, authToken);
+        userData = yield sipClient.exchangeCode(config, authToken);
       } catch (err) {
         throw new Error(`bad token: ${err.message ? err.message : err}`);
       }
