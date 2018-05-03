@@ -20,8 +20,7 @@
     "jwt-js": "latest",
     "lodash": "^4.17.5",
     "unix-timestamp": "latest",
-    "uuid": "latest",
-    "winston": "^2.4.2"
+    "uuid": "latest"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.3",
@@ -40,7 +39,8 @@
     "mocha": "^5.1.1",
     "nyc": "^11.7.1",
     "prettier": "^1.12.1",
-    "sinon": "^4.5.0"
+    "sinon": "^4.5.0",
+    "winston": "^2.4.2"
   },
   "nyc": {
     "lines": 80,

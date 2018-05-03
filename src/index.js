@@ -1,5 +1,4 @@
 const co = require('co');
-const winston = require('winston');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
@@ -14,7 +13,7 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
   ) {
     logger = loggerInstance;
   } else {
-    logger = winston;
+    logger = console;
   }
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
