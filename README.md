@@ -24,7 +24,7 @@ import config from '../../config';
 
 let authHandler;
 
-// This callbak function verifies the email address of the user 
+// This callback function verifies the email address of the user 
 const authCallback = userData => {
   const email = authHandler.sipClient.getEmailFromUserData(userData);
   if (!email.value.endsWith('@civic.com')) {
@@ -69,31 +69,32 @@ login: {
   }
 }
 ```
-See [Civic Docs](https://docs.civic.com/#GettingStarted) for details on setting the config options.
+See [Civic Docs](https://docs.civic.com/#GettingStarted) for details on getting and setting the config options.
 
 ### Example Usage
 
  Add a `login` and `keepAlive` function to your `serverless.yml`
  
  ```
- login:
-   handler: loginHandler.login
-   timeout: 30
-   events:
-     - http:
-       path: login
-       method: POST
-       cors: true
- keepAlive:
-   handler: loginHandler.keepAlive
-   timeout: 30
-   events:
-     - http:
-       path: session/keepAlive
-       method: POST
-       cors: true
- sessionAuthorizer:
-   handler: loginHandler.sessionAuthorizer
+ functions:
+   login:
+     handler: loginHandler.login
+     timeout: 30
+     events:
+       - http:
+         path: login
+         method: POST
+         cors: true
+   keepAlive:
+     handler: loginHandler.keepAlive
+     timeout: 30
+     events:
+       - http:
+         path: session/keepAlive
+         method: POST
+         cors: true
+   sessionAuthorizer:
+     handler: loginHandler.sessionAuthorizer
  ```
 
 ### Linting 
