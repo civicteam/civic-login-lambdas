@@ -1,9 +1,21 @@
 const co = require('co');
+const winston = require('winston');
 const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-module.exports = (logger, config, authCallback, loginCallback) => {
+module.exports = (loggerInstance, config, authCallback, loginCallback) => {
+  let logger;
+  if (
+    typeof loggerInstance.info === 'function' &&
+    typeof loggerInstance.debug === 'function' &&
+    typeof loggerInstance.warn === 'function' &&
+    typeof loggerInstance.error === 'function'
+  ) {
+    logger = loggerInstance;
+  } else {
+    logger = winston;
+  }
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
