@@ -15,7 +15,7 @@ import authFactory from 'civic-login-lambdas';
 
 /*
 Where logger is an instance of a winston logger that logs to your console or custom enviroment 
-or you can set `const logger = false` to turn this off.
+or you can set `const logger = false` to use the default `console` to log.
 */
 import logger from './logger';
 
@@ -73,7 +73,7 @@ See [Civic Docs](https://docs.civic.com/#GettingStarted) for details on getting 
 
 ### Example Usage
 
- Add a `login` and `keepAlive` function to your `serverless.yml`
+ Add a `login`, `sessionAuthorizer` and `keepAlive` function to your `serverless.yml`
  
  ```
  functions:
