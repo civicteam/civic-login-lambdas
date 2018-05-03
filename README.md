@@ -32,7 +32,7 @@ const authCallback = userData => {
    * get ID card data if you asked for proof of identity, home address data if you asked for proof of residence e.t.c.
    */
   
-  // sipClient.getEmailFromUserData() is a convenience method in the library that is used to get the email address from the userData
+  // sipClient.getEmailFromUserData() is a convenience method in this library that is used to get the email address from the userData
   const email = authHandler.sipClient.getEmailFromUserData(userData);
   
   /*
@@ -44,14 +44,14 @@ const authCallback = userData => {
   * }
   */
   
-  // Return null if the validation(s) was sucessful, or return a string containing an error message if the validation(s) failed
+  // Return `null` if the validation(s) was sucessful, or return a string containing an error message if the validation(s) failed
   return null;
 };
 
 // This function initializes the civic-login-lambdas library
 authHandler = authFactory(logger, config.login, authCallback);
 
-// This function handles the login authentication with civic
+// This function handles the login authentication with Civic
 export const login = (event, context, callback) => authHandler.login(event, context, callback);
 
 // This function renews the session token
@@ -79,7 +79,7 @@ login: {
   }
 }
 ```
-`sessionToken` are used to create a standard JWT token that can be used as a session token between the front-end and back-end
+`sessionToken` is used to create a standard JWT token that can be used as a session token between the front-end and back-end
 after authorisation is complete. 
 See [Civic Docs](https://docs.civic.com/#GettingStarted) for details on getting and setting the config options.
 
