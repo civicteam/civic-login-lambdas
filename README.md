@@ -10,7 +10,7 @@ run `npm install civic-login-lambdas` --save
 
 loginHandler.js
 
-``` bash
+``` javascript
 import authFactory from 'civic-login-lambdas';
 
 /*
