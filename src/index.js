@@ -4,17 +4,20 @@ const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
 module.exports = (loggerInstance, config, authCallback, loginCallback) => {
-  let logger;
-  if (
-    typeof loggerInstance.info === 'function' &&
-    typeof loggerInstance.debug === 'function' &&
-    typeof loggerInstance.warn === 'function' &&
-    typeof loggerInstance.error === 'function'
-  ) {
-    logger = loggerInstance;
-  } else {
-    logger = console;
+
+  function loggerInstanceOrConsole(loggerInstance) {
+    if (
+      typeof loggerInstance.info === 'function' &&
+      typeof loggerInstance.warn === 'function' &&
+      typeof loggerInstance.error === 'function'
+    ) {
+      return loggerInstance;
+    } else {
+      return console;
+    }
   }
+
+  const logger = loggerInstanceOrConsole(loggerInstance);
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
