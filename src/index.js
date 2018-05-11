@@ -13,7 +13,7 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
       warn: (...args) => console.warn(...args),
       info: (...args) => console.info(...args),
       debug: (...args) => console.info(...args)
-    }
+    };
   }
 
   const logger = loggerInstanceOrConsole(loggerInstance);
