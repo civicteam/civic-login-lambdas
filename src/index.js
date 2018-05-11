@@ -8,8 +8,12 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
     if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
       return logger;
     }
-    console.debug = (...a) => console.log(...a);
-    return console;
+    return {
+      error: (...args) => console.error(...args),
+      warn: (...args) => console.warn(...args),
+      info: (...args) => console.info(...args),
+      debug: (...args) => console.info(...args)
+    }
   }
 
   const logger = loggerInstanceOrConsole(loggerInstance);
