@@ -3,7 +3,20 @@ const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-module.exports = (logger, config, authCallback) => {
+module.exports = (loggerInstance, config, authCallback, loginCallback) => {
+  function loggerInstanceOrConsole(logger) {
+    if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
+      return logger;
+    }
+    return {
+      error: (...args) => console.error(...args),
+      warn: (...args) => console.warn(...args),
+      info: (...args) => console.info(...args),
+      debug: (...args) => console.info(...args)
+    };
+  }
+
+  const logger = loggerInstanceOrConsole(loggerInstance);
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
@@ -24,7 +37,7 @@ module.exports = (logger, config, authCallback) => {
    * @param {Object} context
    * @param {Function} callback
    */
-  const login = async (event, context, callback) => {
+  const login = (event, context, callback) => {
     if (event.source && event.source === 'serverless-plugin-warmup') {
       logger.info('WarmUP - Lambda is being kept warm!');
       return callback(null, 'Lambda is being kept warm!');
@@ -59,6 +72,10 @@ module.exports = (logger, config, authCallback) => {
         if (failureReason != null) {
           throw new Error(`Access Denied: ${failureReason}`);
         }
+      }
+
+      if (loginCallback) {
+        return yield loginCallback(event, body, authUserId, userData);
       }
 
       const token = sessionToken.create(authUserId);

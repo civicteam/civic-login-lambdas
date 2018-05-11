@@ -14,8 +14,8 @@ loginHandler.js
 import authFactory from 'civic-login-lambdas';
 
 /*
-* Where logger is an instance of any logger that has should respond to functions "warn", "debug",  
-* "info" and "error" being called on it. You can also set `const logger = false` to use the default `console` to log.
+* Where logger is an instance of any logger that has should respond to functions "warn", "info",
+* and "error" being called on it. You can also set `const logger = false` to use the default `console` to log.
 */
 import logger from './logger';
 
