@@ -75,8 +75,10 @@ describe('Login Handler Functions', () => {
       (err, res) => res
     );
     expect(response.statusCode).to.equal(200);
-    expect(JSON.parse(response.body)).to.be.an('object');
-    expect(JSON.parse(response.body).sessionToken).to.be.an('string');
+    const body = JSON.parse(response.body);
+    expect(body).to.be.an('object');
+    expect(body.sessionToken).to.be.a('string');
+    expect(body.userId).to.be.a('string');
   });
 
   it('should keep lambda warm with source event', async () => {
@@ -109,6 +111,7 @@ describe('Login Handler Functions', () => {
     expect(response.statusCode).to.equal(200);
     expect(JSON.parse(response.body)).to.be.an('object');
     expect(JSON.parse(response.body).sessionToken).to.be.an('string');
+    expect(JSON.parse(response.body).userId).to.be.an('string');
   });
 
   it('show renew a valid sessionToken', async () => {

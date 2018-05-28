@@ -66,10 +66,11 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
       }
 
       const authUserId = sipClient.getUserIdFromUserData(userData);
+      const userEmail = sipClient.getEmailFromUserData(userData);
 
       if (authCallback) {
         const failureReason = authCallback(userData);
-        if (failureReason != null) {
+        if (failureReason) {
           throw new Error(`Access Denied: ${failureReason}`);
         }
       }
@@ -81,7 +82,9 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
       const token = sessionToken.create(authUserId);
 
       return {
-        sessionToken: token
+        sessionToken: token,
+        userId: authUserId,
+        email: userEmail ? userEmail.value : undefined
       };
     })
       .then(payload => response.json(callback, payload, 200))
