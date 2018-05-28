@@ -66,7 +66,6 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
       }
 
       const authUserId = sipClient.getUserIdFromUserData(userData);
-      const userEmail = sipClient.getEmailFromUserData(userData);
 
       if (authCallback) {
         const failureReason = authCallback(userData);
@@ -75,16 +74,11 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
         }
       }
 
-      if (loginCallback) {
-        return yield loginCallback(event, body, authUserId, userData);
-      }
-
       const token = sessionToken.create(authUserId);
 
       return {
         sessionToken: token,
-        userId: authUserId,
-        email: userEmail ? userEmail.value : undefined
+        ...(loginCallback ? yield loginCallback(event, body, authUserId, userData) : {})
       };
     })
       .then(payload => response.json(callback, payload, 200))
