@@ -76,7 +76,7 @@ describe('Login Handler Functions', () => {
     );
     expect(response.statusCode).to.equal(200);
     expect(JSON.parse(response.body)).to.be.an('object');
-    expect(JSON.parse(response.body).sessionToken).to.be.a('string');
+    expect(JSON.parse(response.body).sessionToken).to.be.an('string');
   });
 
   it('should keep lambda warm with source event', async () => {
