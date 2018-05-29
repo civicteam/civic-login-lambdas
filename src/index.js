@@ -69,19 +69,16 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
 
       if (authCallback) {
         const failureReason = authCallback(userData);
-        if (failureReason != null) {
+        if (failureReason) {
           throw new Error(`Access Denied: ${failureReason}`);
         }
-      }
-
-      if (loginCallback) {
-        return yield loginCallback(event, body, authUserId, userData);
       }
 
       const token = sessionToken.create(authUserId);
 
       return {
-        sessionToken: token
+        sessionToken: token,
+        ...(loginCallback ? yield loginCallback(event, body, authUserId, userData) : {})
       };
     })
       .then(payload => response.json(callback, payload, 200))

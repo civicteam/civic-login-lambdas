@@ -106,5 +106,7 @@
       "import-order-autofix/order": "error"
     }
   },
-  "eslintIgnore": ["/node_modules/*"]
+  "eslintIgnore": [
+    "/node_modules/*"
+  ]
 }
