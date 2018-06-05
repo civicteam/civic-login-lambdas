@@ -24,7 +24,7 @@ const sampleWarmEvent = {
   source: 'serverless-plugin-warmup'
 };
 
-const sandbox = sinon.createSandbox();
+
 const simpleExchangeCodeResponse = {};
 
 simpleExchangeCodeResponse.exchangeCode = () => ({
@@ -61,18 +61,31 @@ const loginAndGetUserId = async token => {
 
 describe('Login Handler Functions', () => {
   before(() => {
-    sandbox.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
+    sinon.stub(civicSip, 'newClient').returns(simpleExchangeCodeResponse);
   });
+
+  after(() => {
+    civicSip.newClient.restore();
+  });
+
+  const validLoginEvent = {
+    body: JSON.stringify({
+      authToken: authResponse
+    })
+  };
+
+  const loginEventMissingAuthToken = {
+    body: JSON.stringify({})
+  };
+
+  const lambdaCallback = (err, res) => res;
+  const lambdaContext = {};
 
   it('login successfully given a valid authToken - new user', async () => {
     const response = await loginHandler.login(
-      {
-        body: JSON.stringify({
-          authToken: authResponse
-        })
-      },
-      {},
-      (err, res) => res
+      validLoginEvent,
+      lambdaContext,
+      lambdaCallback
     );
     expect(response.statusCode).to.equal(200);
     expect(JSON.parse(response.body)).to.be.an('object');
@@ -86,11 +99,9 @@ describe('Login Handler Functions', () => {
 
   it('should reject login with no auth Token', async () => {
     const response = await loginHandler.login(
-      {
-        body: JSON.stringify({})
-      },
-      {},
-      (err, res) => res
+      loginEventMissingAuthToken,
+      lambdaContext,
+      lambdaCallback
     );
     expect(response.statusCode).to.equal(400);
     expect(JSON.parse(response.body).message).to.equal('no authToken provided');
@@ -98,17 +109,43 @@ describe('Login Handler Functions', () => {
 
   it('should login successfully given a valid authToken - existing user', async () => {
     const response = await loginHandler.login(
-      {
-        body: JSON.stringify({
-          authToken: authResponse
-        })
-      },
-      {},
-      (err, res) => res
+      validLoginEvent,
+      lambdaContext,
+      lambdaCallback
     );
     expect(response.statusCode).to.equal(200);
     expect(JSON.parse(response.body)).to.be.an('object');
     expect(JSON.parse(response.body).sessionToken).to.be.an('string');
+  });
+
+  it('should delegate to the login callback to perform any business logic related to login', async () =>{
+    const loginCallback = sinon.stub().returns(Promise.resolve({}));
+    const loginHandlerWithCallback = handler(logger, config, loginCallback);
+
+    await loginHandlerWithCallback.login(
+      validLoginEvent,
+      lambdaContext,
+      lambdaCallback
+    );
+
+    expect(loginCallback.called).to.equal(true);
+  });
+
+  it('should add any result from the login callback to the login response body', async () =>{
+    const loginCallbackResult = {
+      someKey: 'someValue'
+    };
+    const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
+    const loginHandlerWithCallback = handler(logger, config, loginCallback);
+
+    const response = await loginHandlerWithCallback.login(
+      validLoginEvent,
+      lambdaContext,
+      lambdaCallback
+    );
+
+    const bodyJSON = JSON.parse(response.body);
+    expect(bodyJSON.someKey).to.equal(loginCallbackResult.someKey)
   });
 
   it('show renew a valid sessionToken', async () => {

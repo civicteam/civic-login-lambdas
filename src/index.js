@@ -3,7 +3,17 @@ const sipClient = require('./sipClient');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-module.exports = (loggerInstance, config, authCallback, loginCallback) => {
+function isFunction(functionToCheck) {
+  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
+
+function validateAndCallLoginCallback(loginCallback, ...args) {
+  if (!isFunction(loginCallback)) return {};
+
+  return loginCallback(...args);
+}
+
+module.exports = (loggerInstance, config, loginCallback) => {
   function loggerInstanceOrConsole(logger) {
     if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
       return logger;
@@ -67,18 +77,16 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
 
       const authUserId = sipClient.getUserIdFromUserData(userData);
 
-      if (authCallback) {
-        const failureReason = authCallback(userData);
-        if (failureReason) {
-          throw new Error(`Access Denied: ${failureReason}`);
-        }
-      }
+      // delegate to the caller's login callback after validating the
+      // auth token, to allow the caller to add custom business logic
+      // or validation around login
+      const loginCallbackResponse = yield validateAndCallLoginCallback(loginCallback, event, body, authUserId, userData);
 
       const token = sessionToken.create(authUserId);
 
       return {
         sessionToken: token,
-        ...(loginCallback ? yield loginCallback(event, body, authUserId, userData) : {})
+        ...loginCallbackResponse
       };
     })
       .then(payload => response.json(callback, payload, 200))
