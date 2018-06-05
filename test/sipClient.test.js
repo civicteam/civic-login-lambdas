@@ -1,6 +1,8 @@
 const { expect } = require('chai');
 const sipClient = require('../src/sipClient');
+const civicSip = require('civic-sip-api');
 const { response } = require('../assets/tests.json').sipClientTest;
+const sinon = require('sinon');
 
 describe('sip Client Functions', () => {
   const event = {
@@ -26,15 +28,36 @@ describe('sip Client Functions', () => {
     userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650'
   };
 
-  it('should exchangeCode', async () => {
-    const configIn = {
-      appId: 'sampleAppId',
-      appSecret: 'sampleAppSecret',
-      prvKey: 'samplePrvKey',
-      env: '',
-      api: ''
+  const configIn = {
+    appId: 'sampleAppId',
+    appSecret: 'sampleAppSecret',
+    prvKey: 'samplePrvKey',
+    env: '',
+    api: ''
+  };
+
+  const authToken = response;
+
+  before(() => {
+    const stubClient = {
+      exchangeCode: sinon.stub().withArgs(authToken).returns({
+        data: 'data',
+        userId: 'userId'
+      })
     };
-    const data = await sipClient.exchangeCode(configIn, event.response);
+
+    sinon.stub(civicSip, 'newClient')
+      .withArgs(configIn)
+      .returns(stubClient);
+  });
+
+  after(() => {
+    civicSip.newClient.restore()
+  });
+
+  it('should exchangeCode', async () => {
+
+    const data = await sipClient.exchangeCode(configIn, authToken);
     expect(data.data).to.equal('data');
     expect(data.userId).to.equal('userId');
   });
