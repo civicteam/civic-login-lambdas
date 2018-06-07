@@ -1,16 +1,13 @@
+const createError = require('http-errors');
 const co = require('co');
 const sipClient = require('./sipClient');
+const util = require('./util');
+
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
 function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
-}
-
-function validateAndCallLoginCallback(loginCallback, ...args) {
-  if (!isFunction(loginCallback)) return {};
-
-  return loginCallback(...args);
 }
 
 module.exports = (loggerInstance, config, loginCallback) => {
@@ -24,6 +21,31 @@ module.exports = (loggerInstance, config, loginCallback) => {
       info: (...args) => console.info(...args),
       debug: (...args) => console.info(...args)
     };
+  }
+
+  function handleLoginError(loginError) {
+    logger.error(loginError);
+    if (!!loginError.status) {
+      if (loginError.status === 401) {
+        return Promise.reject(createError(loginError.status, 'Unauthorized'));
+      } else {
+        // this is already an http error, just throw it
+        return Promise.reject(createError(loginError.status, 'Login Error'));
+      }
+    } else {
+      // default error is 500
+      return Promise.reject(createError(500, 'Unauthorized'));
+    }
+  }
+
+  function validateAndCallLoginCallback(loginCallback, ...args) {
+    if (!isFunction(loginCallback)) return {};
+
+    try {
+      return loginCallback(...args);
+    } catch (loginError) {
+      return handleLoginError(loginError);
+    }
   }
 
   const logger = loggerInstanceOrConsole(loggerInstance);
@@ -42,7 +64,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
    *     {
    *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
    *     }
-   *
+
    * @param {Object} event
    * @param {Object} context
    * @param {Function} callback
@@ -60,7 +82,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
       const { authToken } = body;
 
       if (!authToken) {
-        throw new Error('no authToken provided');
+        throw createError(401, 'no authToken provided');
       }
 
       let userData;
@@ -68,20 +90,19 @@ module.exports = (loggerInstance, config, loginCallback) => {
         logger.info('Token exchange for user data...');
         userData = yield sipClient.exchangeCode(config.app, authToken);
       } catch (err) {
-        throw new Error(`bad token: ${err.message ? err.message : err}`);
+        throw createError(400, `bad token: ${err.message ? err.message : err}`);
       }
 
       if (!userData) {
-        throw new Error('unable to get userData');
+        throw createError('unable to get userData');
       }
 
-      const authUserId = sipClient.getUserIdFromUserData(userData);
 
       // delegate to the caller's login callback after validating the
       // auth token, to allow the caller to add custom business logic
       // or validation around login
-      const loginCallbackResponse = yield validateAndCallLoginCallback(loginCallback, event, body, authUserId, userData);
-
+      const loginCallbackResponse = yield validateAndCallLoginCallback(loginCallback, event, userData);
+      const authUserId = util.getUserIdFromUserData(userData);
       const token = sessionToken.create(authUserId);
 
       return {
@@ -90,13 +111,16 @@ module.exports = (loggerInstance, config, loginCallback) => {
       };
     })
       .then(payload => response.json(callback, payload, 200))
-      .catch(err => response.errorJson(callback, err));
+      .catch(error => {
+        if (!!error.status) return response.error(callback, error);
+        return response.error(callback, createError(500, 'Internal Server Error'));
+      });
   };
 
   function getTokenFromEvent(event) {
     const token = sessionToken.keepAliveFromEvent(event);
     if (!token) {
-      throw new Error('token not valid');
+      throw createError(400, 'token not valid');
     }
     return token;
   }
@@ -137,7 +161,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
         200
       );
     } catch (err) {
-      return response.errorJson(callback, 'Unauthorized', 401);
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
   };
 
@@ -176,13 +200,14 @@ module.exports = (loggerInstance, config, loginCallback) => {
       userId = sessionToken.validate(token);
     } catch (err) {
       logger.error('session token validate error: ', token, err);
-      return callback(JSON.stringify({ message: 'Unauthorized' }));
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
 
     if (!userId) {
       logger.warn('no user found for token: ', token, event.headers);
-      return callback('Unauthorized');
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
+
     const authResponse = generatePolicy('user', 'Allow', event.methodArn);
     authResponse.context = {
       userId

@@ -1,5 +1,4 @@
 const civicSip = require('civic-sip-api');
-const _ = require('lodash');
 
 const exchangeCode = (optionsIn, authToken) => {
   const options = {
@@ -17,18 +16,6 @@ const exchangeCode = (optionsIn, authToken) => {
   return civicClient.exchangeCode(authToken);
 };
 
-const getEmailFromUserData = userData => {
-  if (userData && _.isArray(userData.data)) {
-    return _.find(userData.data, { label: 'contact.personal.email' });
-  }
-
-  return undefined;
-};
-
-const getUserIdFromUserData = userData => userData && userData.userId;
-
 module.exports = {
-  exchangeCode,
-  getEmailFromUserData,
-  getUserIdFromUserData
+  exchangeCode
 };

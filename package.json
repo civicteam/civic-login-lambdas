@@ -15,6 +15,7 @@
   "dependencies": {
     "civic-sip-api": "civicteam/npm-civic-sip-api.git",
     "co": "^4.6.0",
+    "http-errors": "^1.6.3",
     "json-stable-stringify": "latest",
     "jsrsasign": "latest",
     "jwt-js": "latest",
