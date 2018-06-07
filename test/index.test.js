@@ -38,7 +38,7 @@ const stubCivicClientInvalidToken = {
   }
 };
 
-const loginHandler = handler(logger, config, x => x);
+const loginHandler = handler(logger, config, () => {});
 
 const loginAndGetUserId = async token => {
   const login = await loginHandler.login(
@@ -135,9 +135,8 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().returns(null);
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
-
-        expect(loginCallback.called).to.equal(true);
+        const response = await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
+        expect(response.statusCode).to.equal(200);
       });
 
       it('should throw a 500 error if the login callback fails with some random error', async () => {
@@ -204,8 +203,7 @@ describe('Login Handler Functions', () => {
       expect(response).to.equal('Lambda is being kept warm!');
     });
 
-
-    it('show renew a valid sessionToken', async () => {
+    it('should renew a valid sessionToken', async () => {
       const login = await loginAndGetUserId(authResponse);
       const keepAliveResponse = await keepAlive({
         headers: {

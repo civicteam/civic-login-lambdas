@@ -37,14 +37,17 @@ module.exports = (loggerInstance, config, loginCallback) => {
       return Promise.reject(createError(loginError.status, 'Login Error'));
     }
     // default error is 500
-    return Promise.reject(createError(500, 'Unauthorized'));
+    return Promise.reject(createError(500, 'Internal Server Error'));
   }
 
   function validateAndCallLoginCallback(...args) {
     if (!isFunction(loginCallback)) return {};
 
     try {
-      return loginCallback(...args);
+      const loginResult = loginCallback(...args);
+
+      // wrap in a promise in case the result is not a promise
+      return Promise.resolve(loginResult);
     } catch (loginError) {
       return handleLoginError(loginError);
     }
@@ -111,6 +114,8 @@ module.exports = (loggerInstance, config, loginCallback) => {
       .then(payload => response.json(callback, payload, 200))
       .catch(error => {
         if (error.status) return response.error(callback, error);
+
+        logger.error(error);
         return response.error(callback, createError(500, 'Internal Server Error'));
       });
   };
