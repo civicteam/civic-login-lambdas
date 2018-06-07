@@ -10,35 +10,37 @@ function isFunction(functionToCheck) {
   return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
-module.exports = (loggerInstance, config, loginCallback) => {
-  function loggerInstanceOrConsole(logger) {
-    if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
-      return logger;
-    }
-    return {
-      error: (...args) => console.error(...args),
-      warn: (...args) => console.warn(...args),
-      info: (...args) => console.info(...args),
-      debug: (...args) => console.info(...args)
-    };
+function loggerInstanceOrConsole(logger) {
+  if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
+    return logger;
   }
+  return {
+    error: (...args) => console.error(...args),
+    warn: (...args) => console.warn(...args),
+    info: (...args) => console.info(...args),
+    debug: (...args) => console.info(...args)
+  };
+}
+
+module.exports = (loggerInstance, config, loginCallback) => {
+  const logger = loggerInstanceOrConsole(loggerInstance);
+  const response = responseFactory(logger);
+  const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
   function handleLoginError(loginError) {
     logger.error(loginError);
-    if (!!loginError.status) {
+    if (loginError.status) {
       if (loginError.status === 401) {
         return Promise.reject(createError(loginError.status, 'Unauthorized'));
-      } else {
-        // this is already an http error, just throw it
-        return Promise.reject(createError(loginError.status, 'Login Error'));
       }
-    } else {
-      // default error is 500
-      return Promise.reject(createError(500, 'Unauthorized'));
+      // this is already an http error, just throw it
+      return Promise.reject(createError(loginError.status, 'Login Error'));
     }
+    // default error is 500
+    return Promise.reject(createError(500, 'Unauthorized'));
   }
 
-  function validateAndCallLoginCallback(loginCallback, ...args) {
+  function validateAndCallLoginCallback(...args) {
     if (!isFunction(loginCallback)) return {};
 
     try {
@@ -47,10 +49,6 @@ module.exports = (loggerInstance, config, loginCallback) => {
       return handleLoginError(loginError);
     }
   }
-
-  const logger = loggerInstanceOrConsole(loggerInstance);
-  const response = responseFactory(logger);
-  const sessionToken = sessionTokenFactory(config.sessionToken, logger);
 
   /**
    * @api {post} admin/login  /../login (POST)
@@ -94,14 +92,14 @@ module.exports = (loggerInstance, config, loginCallback) => {
       }
 
       if (!userData) {
-        throw createError('unable to get userData');
+        throw createError(500, 'unable to get userData');
       }
-
 
       // delegate to the caller's login callback after validating the
       // auth token, to allow the caller to add custom business logic
       // or validation around login
-      const loginCallbackResponse = yield validateAndCallLoginCallback(loginCallback, event, userData);
+      const loginCallbackResponse = yield validateAndCallLoginCallback(event, userData);
+
       const authUserId = util.getUserIdFromUserData(userData);
       const token = sessionToken.create(authUserId);
 
@@ -112,7 +110,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
     })
       .then(payload => response.json(callback, payload, 200))
       .catch(error => {
-        if (!!error.status) return response.error(callback, error);
+        if (error.status) return response.error(callback, error);
         return response.error(callback, createError(500, 'Internal Server Error'));
       });
   };
@@ -192,7 +190,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
     const token = event.authorizationToken;
     if (!token) {
       logger.warn('no token provided', event.headers);
-      return callback('Unauthorized');
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
 
     let userId;

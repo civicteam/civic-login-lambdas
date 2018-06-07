@@ -16,7 +16,7 @@ module.exports = logger => {
   const error = (callback, httpError) => {
     const response = {
       statusCode: httpError.status,
-      body: JSON.stringify({message: httpError.message})
+      body: JSON.stringify({ message: httpError.message })
     };
 
     logger.error('Error: ', JSON.stringify(response));
