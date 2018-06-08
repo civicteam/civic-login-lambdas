@@ -20,7 +20,13 @@ module.exports = logger => {
     };
 
     logger.error('Error: ', JSON.stringify(response));
-    return callback(null, response);
+
+    // due to the way AWS handles errors in customAuthorizers, we log the *real*
+    // error here but respond with 'Unauthorized'
+    // https://forums.aws.amazon.com/thread.jspa?threadID=226689
+    // return callback(null, response);
+
+    return callback('Unauthorized');
   };
 
   return {
