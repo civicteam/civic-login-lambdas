@@ -105,10 +105,13 @@ module.exports = (loggerInstance, config, loginCallback) => {
       const authUserId = util.getUserIdFromUserData(userData);
       const token = sessionToken.create(authUserId);
 
-      return {
-        sessionToken: token,
-        ...loginCallbackResponse
-      };
+      return _.assign(
+        {},
+        {
+          sessionToken: token
+        },
+        loginCallbackResponse
+      );
     })
       .then(payload => response.json(callback, payload, 200))
       .catch(error => {
