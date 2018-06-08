@@ -1,24 +1,56 @@
+const _ = require('lodash');
+const createError = require('http-errors');
 const co = require('co');
 const sipClient = require('./sipClient');
+const util = require('./util');
+
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-module.exports = (loggerInstance, config, authCallback, loginCallback) => {
-  function loggerInstanceOrConsole(logger) {
-    if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
-      return logger;
-    }
-    return {
-      error: (...args) => console.error(...args),
-      warn: (...args) => console.warn(...args),
-      info: (...args) => console.info(...args),
-      debug: (...args) => console.info(...args)
-    };
+function loggerInstanceOrConsole(logger) {
+  if ([logger.info, logger.warn, logger.error].every(_.isFunction)) {
+    // the logger is set up correctly
+    return logger;
   }
 
+  return {
+    error: (...args) => console.error(...args),
+    warn: (...args) => console.warn(...args),
+    info: (...args) => console.info(...args),
+    debug: (...args) => console.info(...args)
+  };
+}
+
+module.exports = (loggerInstance, config, loginCallback) => {
   const logger = loggerInstanceOrConsole(loggerInstance);
   const response = responseFactory(logger);
   const sessionToken = sessionTokenFactory(config.sessionToken, logger);
+
+  function handleLoginError(loginError) {
+    logger.error(loginError);
+    if (loginError.status) {
+      if (loginError.status === 401) {
+        return Promise.reject(createError(loginError.status, 'Unauthorized'));
+      }
+      // this is already an http error, just throw it
+      return Promise.reject(createError(loginError.status, 'Login Error'));
+    }
+    // default error is 500
+    return Promise.reject(createError(500, 'Internal Server Error'));
+  }
+
+  function validateAndCallLoginCallback(...args) {
+    if (!_.isFunction(loginCallback)) return {};
+
+    try {
+      const loginResult = loginCallback(...args);
+
+      // wrap in a promise in case the result is not a promise
+      return Promise.resolve(loginResult);
+    } catch (loginError) {
+      return handleLoginError(loginError);
+    }
+  }
 
   /**
    * @api {post} admin/login  /../login (POST)
@@ -32,7 +64,7 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
    *     {
    *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
    *     }
-   *
+
    * @param {Object} event
    * @param {Object} context
    * @param {Function} callback
@@ -50,7 +82,7 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
       const { authToken } = body;
 
       if (!authToken) {
-        throw new Error('no authToken provided');
+        throw createError(401, 'no authToken provided');
       }
 
       let userData;
@@ -58,37 +90,39 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
         logger.info('Token exchange for user data...');
         userData = yield sipClient.exchangeCode(config.app, authToken);
       } catch (err) {
-        throw new Error(`bad token: ${err.message ? err.message : err}`);
+        throw createError(400, `bad token: ${err.message ? err.message : err}`);
       }
 
       if (!userData) {
-        throw new Error('unable to get userData');
+        throw createError(500, 'unable to get userData');
       }
 
-      const authUserId = sipClient.getUserIdFromUserData(userData);
+      // delegate to the caller's login callback after validating the
+      // auth token, to allow the caller to add custom business logic
+      // or validation around login
+      const loginCallbackResponse = yield validateAndCallLoginCallback(event, userData);
 
-      if (authCallback) {
-        const failureReason = authCallback(userData);
-        if (failureReason) {
-          throw new Error(`Access Denied: ${failureReason}`);
-        }
-      }
-
+      const authUserId = util.getUserIdFromUserData(userData);
       const token = sessionToken.create(authUserId);
 
       return {
         sessionToken: token,
-        ...(loginCallback ? yield loginCallback(event, body, authUserId, userData) : {})
+        ...loginCallbackResponse
       };
     })
       .then(payload => response.json(callback, payload, 200))
-      .catch(err => response.errorJson(callback, err));
+      .catch(error => {
+        if (error.status) return response.error(callback, error);
+
+        logger.error(error);
+        return response.error(callback, createError(500, 'Internal Server Error'));
+      });
   };
 
   function getTokenFromEvent(event) {
     const token = sessionToken.keepAliveFromEvent(event);
     if (!token) {
-      throw new Error('token not valid');
+      throw createError(400, 'token not valid');
     }
     return token;
   }
@@ -129,7 +163,7 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
         200
       );
     } catch (err) {
-      return response.errorJson(callback, 'Unauthorized', 401);
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
   };
 
@@ -160,7 +194,7 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
     const token = event.authorizationToken;
     if (!token) {
       logger.warn('no token provided', event.headers);
-      return callback('Unauthorized');
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
 
     let userId;
@@ -168,13 +202,14 @@ module.exports = (loggerInstance, config, authCallback, loginCallback) => {
       userId = sessionToken.validate(token);
     } catch (err) {
       logger.error('session token validate error: ', token, err);
-      return callback(JSON.stringify({ message: 'Unauthorized' }));
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
 
     if (!userId) {
       logger.warn('no user found for token: ', token, event.headers);
-      return callback('Unauthorized');
+      return response.error(callback, createError(401, 'Unauthorized'));
     }
+
     const authResponse = generatePolicy('user', 'Allow', event.methodArn);
     authResponse.context = {
       userId
