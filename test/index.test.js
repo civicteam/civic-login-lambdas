@@ -49,8 +49,6 @@ const loginAndGetUserId = async token => {
     },
     {},
     (err, response) => {
-      console.log('here');
-      console.log(err, response);
       if (err) return err;
       return response;
     }

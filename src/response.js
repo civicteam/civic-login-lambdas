@@ -20,6 +20,7 @@ module.exports = logger => {
     };
 
     logger.error('Error: ', JSON.stringify(response));
+    logger.error('Error reported to client: Unauthorized');
 
     // due to the way AWS handles errors in customAuthorizers, we log the *real*
     // error here but respond with 'Unauthorized'
