@@ -5,9 +5,11 @@ const response = require('../src/response');
 
 describe('Response Functions', () => {
   const { error, json } = response(winston);
-  let data;
+  let dataResponse;
+  let errorResponse;
   const callback = (callbackError, callbackResponse) => {
-    data = callbackResponse;
+    dataResponse = callbackResponse;
+    errorResponse = callbackError;
   };
 
   it('should parse error response', () => {
@@ -15,18 +17,20 @@ describe('Response Functions', () => {
 
     error(callback, createError(400, errorMessage));
 
-    const parsedBody = JSON.parse(data.body);
+    expect(errorResponse).to.equal('Unauthorized');
 
-    expect(data.statusCode).to.equal(400);
-    expect(parsedBody.message).to.equal(errorMessage);
+    // Consider reenabling once
+    // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+    // expect(errorResponse.statusCode).to.equal(400);
+    // expect(errorResponse.message).to.equal(errorMessage);
   });
 
   it('should parse json response', () => {
     json(callback, 'sampleData', 200);
 
-    expect(data.statusCode).to.equal(200);
-    expect(data.body).to.equal('"sampleData"');
-    expect(data.headers['Access-Control-Allow-Credentials']).to.equal(true);
-    expect(data.headers['Access-Control-Allow-Origin']).to.equal('*');
+    expect(dataResponse.statusCode).to.equal(200);
+    expect(dataResponse.body).to.equal('"sampleData"');
+    expect(dataResponse.headers['Access-Control-Allow-Credentials']).to.equal(true);
+    expect(dataResponse.headers['Access-Control-Allow-Origin']).to.equal('*');
   });
 });

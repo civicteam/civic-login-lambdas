@@ -48,7 +48,10 @@ const loginAndGetUserId = async token => {
       })
     },
     {},
-    (err, response) => response
+    (err, response) => {
+      if (err) return err;
+      return response;
+    }
   );
 
   const authResp = await loginHandler.sessionAuthorizer(
@@ -76,19 +79,27 @@ describe('Login Handler Functions', () => {
     body: JSON.stringify({})
   };
 
-  const lambdaCallback = (err, res) => res;
+  const lambdaCallback = (err, res) => {
+    if (err) return err;
+    return res;
+  };
   const lambdaContext = {};
 
   describe('login', () => {
     it('should keep lambda warm with source event', async () => {
-      const response = await loginHandler.login(sampleWarmEvent, {}, (err, res) => res);
+      const response = await loginHandler.login(sampleWarmEvent, {}, lambdaCallback);
       expect(response).to.equal('Lambda is being kept warm!');
     });
 
     it('should reject login with no auth Token', async () => {
       const response = await loginHandler.login(loginEventMissingAuthToken, lambdaContext, lambdaCallback);
-      expect(response.statusCode).to.equal(401);
-      expect(JSON.parse(response.body).message).to.equal('no authToken provided');
+
+      expect(response).to.equal('Unauthorized');
+
+      // Consider reenabling once
+      // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+      // expect(response.statusCode).to.equal(401);
+      // expect(JSON.parse(response.body).message).to.equal('no authToken provided');
     });
 
     describe('with an invalid token', () => {
@@ -100,9 +111,14 @@ describe('Login Handler Functions', () => {
         civicSip.newClient.restore();
       });
 
-      it('returns a 400 error on an unverified token', async () => {
+      it('returns an error on an unverified token', async () => {
         const response = await loginHandler.login(validLoginEvent, lambdaContext, lambdaCallback);
-        expect(response.statusCode).to.equal(400);
+
+        expect(response).to.equal('Unauthorized');
+
+        // Consider reenabling once
+        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+        // expect(response.statusCode).to.equal(400);
       });
     });
 
@@ -139,13 +155,17 @@ describe('Login Handler Functions', () => {
         expect(response.statusCode).to.equal(200);
       });
 
-      it('should throw a 500 error if the login callback fails with some random error', async () => {
+      it('should throw an error if the login callback fails with some random error', async () => {
         const loginCallback = sinon.stub().throws(Error('some error occurred during login'));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
         const response = await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
-        console.log(response);
-        expect(response.statusCode).to.equal(500);
+
+        expect(response).to.equal('Unauthorized');
+
+        // Consider reenabling once
+        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+        // expect(response.statusCode).to.equal(500);
       });
 
       it('should rethrow the error from the login callback if it has a status', async () => {
@@ -153,7 +173,12 @@ describe('Login Handler Functions', () => {
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
         const response = await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
-        expect(response.statusCode).to.equal(401);
+
+        expect(response).to.equal('Unauthorized');
+
+        // Consider reenabling once
+        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+        // expect(response.statusCode).to.equal(401);
       });
 
       it('should handle a rejected promise by the login callback the same as a thrown error', async () => {
@@ -163,7 +188,12 @@ describe('Login Handler Functions', () => {
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
         const response = await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
-        expect(response.statusCode).to.equal(401);
+
+        expect(response).to.equal('Unauthorized');
+
+        // Consider reenabling once
+        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+        // expect(response.statusCode).to.equal(401);
       });
 
       it('should add any result from the login callback to the login response body', async () => {
@@ -191,9 +221,10 @@ describe('Login Handler Functions', () => {
     });
 
     const keepAlive = (event, context) =>
-      new Promise((resolve, reject) => {
+      new Promise(resolve => {
         loginHandler.keepAlive(event, context, (error, response) => {
-          if (error) reject(error);
+          // resolve rather than reject here as we still produce an http response
+          if (error) resolve(error);
           resolve(response);
         });
       });
@@ -232,8 +263,13 @@ describe('Login Handler Functions', () => {
           }
         }
       });
-      expect(keepAliveResponse.statusCode).to.equal(401);
-      expect(JSON.parse(keepAliveResponse.body).message).to.deep.equal('Unauthorized');
+
+      expect(keepAliveResponse).to.equal('Unauthorized');
+
+      // Consider reenabling once
+      // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+      // expect(keepAliveResponse.statusCode).to.equal(401);
+      // expect(JSON.parse(keepAliveResponse.body).message).to.deep.equal('Unauthorized');
     });
   });
 
@@ -247,9 +283,11 @@ describe('Login Handler Functions', () => {
     });
 
     const sessionAuthorizer = (event, context) =>
-      new Promise((resolve, reject) => {
+      new Promise(resolve => {
         loginHandler.sessionAuthorizer(event, context, (error, response) => {
-          if (error) reject(error);
+          // resolve rather than reject here as we still produce an http response
+          if (error) resolve(error);
+
           resolve(response);
         });
       });
@@ -268,13 +306,21 @@ describe('Login Handler Functions', () => {
         authorizationToken: 'invalid'
       });
 
-      expect(response.statusCode).to.equal(401);
+      expect(response).to.equal('Unauthorized');
+
+      // Consider reenabling once
+      // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+      // expect(response.statusCode).to.equal(401);
     });
 
     it('should return a 401 on a missing sessionToken', async () => {
       const response = await sessionAuthorizer({});
 
-      expect(response.statusCode).to.equal(401);
+      expect(response).to.equal('Unauthorized');
+
+      // Consider reenabling once
+      // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
+      // expect(response.statusCode).to.equal(401);
     });
   });
 });
