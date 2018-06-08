@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const createError = require('http-errors');
 const co = require('co');
 const sipClient = require('./sipClient');
@@ -6,14 +7,12 @@ const util = require('./util');
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
 
-function isFunction(functionToCheck) {
-  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
-}
-
 function loggerInstanceOrConsole(logger) {
-  if (typeof logger.info === 'function' && typeof logger.warn === 'function' && typeof logger.error === 'function') {
+  if ([logger.info, logger.warn, logger.error].every(_.isFunction)) {
+    // the logger is set up correctly
     return logger;
   }
+
   return {
     error: (...args) => console.error(...args),
     warn: (...args) => console.warn(...args),
@@ -41,7 +40,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
   }
 
   function validateAndCallLoginCallback(...args) {
-    if (!isFunction(loginCallback)) return {};
+    if (!_.isFunction(loginCallback)) return {};
 
     try {
       const loginResult = loginCallback(...args);
