@@ -2,7 +2,7 @@
 
 const { expect } = require('chai');
 const session = require('../src/sessionToken');
-const { config } = require('../assets/tests').indexTest;
+const { config } = require('./assets/tests').indexTest;
 
 const sessionToken = session(config.sessionToken);
 describe('SessionToken Functions', () => {
