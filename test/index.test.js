@@ -7,8 +7,8 @@ const createError = require('http-errors');
 
 const logger = Winston;
 const handler = require('../src/index');
-const { appId, config } = require('./assets/tests').indexTest;
 const jwt = require('../src/jwt');
+const { appId, config } = require('./assets/tests').indexTest;
 
 const authCode = uuidV4();
 

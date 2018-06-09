@@ -6,7 +6,7 @@ const config = {
     app: {
       appId: '*** The appId you receive when setting up your app on integrate.civic.com',
       pubKey: '*** Your signing public key from integrate.civic.com',
-      encPubKey: '*** Your encryption public key from integrate.civic.com',
+      encPubKey: '*** Your encryption public key from integrate.civic.com'
     },
     sessionToken: {
       issuer: 'my-app-session-token',
@@ -39,15 +39,15 @@ function loginCallback(event, userData) {
   };
 }
 
-const authHandler = authFactory(logger, config.login, loginCallback);
+const authHandler = authFactory(console, config.login, loginCallback);
 
 const hello = (event, context, callback) => {
   const response = {
     statusCode: 200,
     body: JSON.stringify({
       message: 'Go Serverless v1.0! Your function executed successfully!',
-      input: event,
-    }),
+      input: event
+    })
   };
 
   callback(null, response);
