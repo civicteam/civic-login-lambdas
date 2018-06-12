@@ -18,10 +18,14 @@ const config = {
   }
 };
 
-// add login business logic here - acceptable return values are objects, promises or null.
+// Add any service-specific login business logic here.
 // userData contains a list of information about the logging in user.
 // The details it wil contain depends on the information you requested in the login process.
 // see docs.civic.com for details.
+//
+// This is an example implementation that simply checks that userData
+// contains an email address, and includes that in a response
+// Acceptable return values are objects, promises or null.
 // Any return values will be added to the login response to the client
 function loginCallback(event, userData) {
   const emailObject = loginUtils.getEmailFromUserData(userData);
