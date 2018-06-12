@@ -1,0 +1,32 @@
+service: civic-login-lambdas-example
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+  stage: dev
+  region: us-east-1
+  timeout: 60
+  cors: true
+
+functions:
+  login:
+    handler: handler.login
+    events:
+      - http:
+          path: login
+          method: POST
+  keepAlive:
+    handler: handler.keepAlive
+    events:
+      - http:
+          path: session/keepAlive
+          method: POST
+  hello:
+    handler: handler.hello
+    events:
+      - http:
+          path: dummy
+          method: GET
+          authorizer: sessionAuthorizer
+  sessionAuthorizer:
+    handler: handler.sessionAuthorizer

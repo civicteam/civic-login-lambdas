@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const civicSip = require('civic-sip-api');
 const sipClient = require('../src/sipClient');
 
-const { response } = require('../assets/tests.json').sipClientTest;
+const { response } = require('./assets/tests.json').sipClientTest;
 
 describe('sip Client Functions', () => {
   const configIn = {
