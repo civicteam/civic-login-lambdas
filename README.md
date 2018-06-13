@@ -25,7 +25,7 @@ See /example for an example using the Serverless framework.
 node scripts/generateSessionTokenKeyPair
 ```
 
-The session token signer uses an ECDSA signing algorithm using the secp256r1 ECC curve. To generate a key pair, you can run:
+The session token signer uses an ECDSA signing algorithm using the secp256r1 ECC curve.
 Note - the private key must be kept secret. If it is compromised, an attacker could generate a token that would be accepted by your back-end services.
 
 2.
@@ -66,6 +66,42 @@ where config is a JS object that looks like:
 }
 ```
 Note - the session token issuer, audience and subject are not used in the token verification. You can set any values you like here.
+
+3.
+
+If using the [Serverless Framework](https://serverless.com/):
+
+serverless.yml
+```
+functions:
+  # The login endpoint to pass the civic login token to.
+  # The response contains a session JWT token
+  login:
+    handler: handler.login
+    events:
+      - http:
+          path: login
+          method: POST
+  # post the session token here to retrieve a renewed one
+  keepAlive:
+    handler: handler.keepAlive
+    events:
+      - http:
+          path: session/keepAlive
+          method: POST
+  # a custom authorizer that validates the JWT token
+  sessionAuthorizer:
+    handler: handler.sessionAuthorizer
+
+  # your lambda, secured using civic-login
+  my-secured-lambda:
+    handler: handler.helloworld
+    events:
+      - http:
+          path: hello
+          method: GET
+          authorizer: sessionAuthorizer
+```
 
 ### The session token
 
