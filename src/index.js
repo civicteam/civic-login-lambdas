@@ -6,6 +6,7 @@ const util = require('./util');
 
 const sessionTokenFactory = require('./sessionToken');
 const responseFactory = require('./response');
+const LoginData = require('./loginData');
 
 function loggerInstanceOrConsole(logger) {
   if ([logger.info, logger.warn, logger.error].every(_.isFunction)) {
@@ -18,6 +19,17 @@ function loggerInstanceOrConsole(logger) {
     warn: (...args) => console.warn(...args),
     info: (...args) => console.info(...args),
     debug: (...args) => console.info(...args)
+  };
+}
+
+function extractResponse(loginCallbackResponse, userData) {
+  if (loginCallbackResponse instanceof LoginData) {
+    return loginCallbackResponse;
+  }
+  const authUserId = util.getUserIdFromUserData(userData);
+  return {
+    sessionTokenContents: { userId: authUserId },
+    loginResponse: loginCallbackResponse
   };
 }
 
@@ -102,15 +114,16 @@ module.exports = (loggerInstance, config, loginCallback) => {
       // or validation around login
       const loginCallbackResponse = yield validateAndCallLoginCallback(event, userData);
 
-      const authUserId = util.getUserIdFromUserData(userData);
-      const token = sessionToken.create(authUserId);
+      const { sessionTokenContents, loginResponse } = extractResponse(loginCallbackResponse, userData);
+
+      const token = sessionToken.create(sessionTokenContents);
 
       return _.assign(
         {},
         {
           sessionToken: token
         },
-        loginCallbackResponse
+        loginResponse
       );
     })
       .then(payload => response.json(callback, payload, 200))
