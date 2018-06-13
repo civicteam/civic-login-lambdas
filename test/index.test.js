@@ -8,6 +8,7 @@ const createError = require('http-errors');
 const logger = Winston;
 const handler = require('../src/index');
 const jwt = require('../src/jwt');
+const LoginData = require('../src/loginData');
 const { appId, config } = require('./assets/tests').indexTest;
 
 const authCode = uuidV4();
@@ -208,6 +209,50 @@ describe('Login Handler Functions', () => {
         const bodyJSON = JSON.parse(response.body);
         expect(bodyJSON.someKey).to.equal(loginCallbackResult.someKey);
       });
+
+      // eslint-disable-next-line max-len
+      it('should add LoginData.loginResponse to the login response if the callback result is of type LoginData', async () => {
+        const loginCallbackResult = new LoginData(
+          {
+            loginKey: 'loginValue'
+          },
+          {
+            sessionTokenKey: 'sessionTokenValue'
+          }
+        );
+        const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
+        const loginHandlerWithCallback = handler(logger, config, loginCallback);
+
+        const response = await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
+
+        const bodyJSON = JSON.parse(response.body);
+        expect(bodyJSON.loginKey).to.equal(loginCallbackResult.loginResponse.loginKey);
+      });
+
+      it(
+        'should add LoginData.sessionTokenContents to the session token if the' +
+          'callback result is of type LoginData',
+        async () => {
+          const loginCallbackResult = new LoginData(
+            {
+              loginKey: 'loginValue'
+            },
+            {
+              sessionTokenKey: 'sessionTokenValue'
+            }
+          );
+          const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
+          const loginHandlerWithCallback = handler(logger, config, loginCallback);
+
+          const response = await loginHandlerWithCallback.login(validLoginEvent, lambdaContext, lambdaCallback);
+
+          const bodyJSON = JSON.parse(response.body);
+          const token = bodyJSON.sessionToken;
+
+          const decodedData = jwt.decode(token).payloadObj.data;
+          expect(decodedData.sessionTokenKey).to.equal(loginCallbackResult.sessionTokenContents.sessionTokenKey);
+        }
+      );
     });
   });
 

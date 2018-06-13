@@ -1,15 +1,26 @@
 const uuidV4 = require('uuid/v4');
+const _ = require('lodash');
 const jwt = require('./jwt');
 
 const JWT_EXPIRATION = '10m'; // 10 minutes
 const JWT_GRACE_PERIOD = 60; // 1 minutes
 
 module.exports = (sessionConfig, logger) => {
-  const create = (userId, expiration = JWT_EXPIRATION) => {
-    const payload = {
-      sessionId: uuidV4(),
-      userId
-    };
+  const create = (sessionTokenContents, expiration = JWT_EXPIRATION) => {
+    // for backwards-compatibility and simplicity, assume that the sessionTokenContents
+    // is simply the UserId if it is not an object
+    const sessionTokenContentObj = _.isObject(sessionTokenContents)
+      ? sessionTokenContents
+      : { userId: sessionTokenContents };
+
+    const payload = _.merge(
+      {},
+      {
+        sessionId: uuidV4()
+      },
+      sessionTokenContentObj
+    );
+
     return jwt.createToken(
       sessionConfig.issuer,
       sessionConfig.audience,

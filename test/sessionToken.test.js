@@ -6,9 +6,22 @@ const { config } = require('./assets/tests').indexTest;
 
 const sessionToken = session(config.sessionToken);
 describe('SessionToken Functions', () => {
-  it('should create a valid session token', () => {
+  it('should create a valid session token from a user Id', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
+    expect(token).to.not.be.undefined;
+    expect(token).to.be.a('string');
+    const userId = sessionToken.validate(token);
+    expect(origUserId).to.equal(userId);
+    expect(sessionToken.test.verify(token, 60)).to.be.true;
+  });
+
+  it('should create a valid session token from an object containing a user Id', () => {
+    const origUserId = 'userid-1';
+    const sessionTokenContents = {
+      userId: origUserId
+    };
+    const token = sessionToken.create(sessionTokenContents, '1m');
     expect(token).to.not.be.undefined;
     expect(token).to.be.a('string');
     const userId = sessionToken.validate(token);
