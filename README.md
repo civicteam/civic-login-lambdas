@@ -22,7 +22,7 @@ See /example for an example using the Serverless framework.
 1. Generate a session token key pair using:
 
 ```
-node scripts/generateSessionTokenKeyPair
+node node_modules/civic-login-lambdas/scripts/generateSessionTokenKeyPair.js
 ```
 
 The session token signer uses an ECDSA signing algorithm using the secp256r1 ECC curve.
