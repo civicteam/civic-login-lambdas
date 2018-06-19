@@ -102,7 +102,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
         logger.info('Token exchange for user data...');
         userData = yield sipClient.exchangeCode(config.app, authToken);
       } catch (err) {
-        throw createError(400, `bad token: ${err.message ? err.message : err}`);
+        throw createError(400, `bad token: ${err.message ? err.message : JSON.stringify(err)}`);
       }
 
       if (!userData) {
