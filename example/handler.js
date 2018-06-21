@@ -5,8 +5,11 @@ const config = {
   login: {
     app: {
       appId: '*** The appId you receive when setting up your app on integrate.civic.com',
+      appSecret: '*** Your app secret from integrate.civic.com',
       pubKey: '*** Your signing public key from integrate.civic.com',
-      encPubKey: '*** Your encryption public key from integrate.civic.com'
+      prvKey: '*** Your signing private key from integrate.civic.com',
+      encPubKey: '*** Your encryption public key from integrate.civic.com',
+      encPrvKey: '*** Your encryption private key from integrate.civic.com'
     },
     sessionToken: {
       issuer: 'my-app-session-token',
