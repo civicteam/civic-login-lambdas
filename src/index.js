@@ -209,8 +209,9 @@ module.exports = (loggerInstance, config, loginCallback) => {
   const sessionAuthorizer = (event, context, callback) => {
     const token = event.authorizationToken;
     if (!token) {
-      logger.warn('no token provided', event.headers);
-      return response.error(callback, createError(401, 'Unauthorized'));
+      logger.error('no token provided', event.headers);
+      response.error(callback, createError(401, 'Unauthorized'));
+      return;
     }
 
     let userId;
@@ -218,19 +219,26 @@ module.exports = (loggerInstance, config, loginCallback) => {
       userId = sessionToken.validate(token);
     } catch (err) {
       logger.error('session token validate error: ', token, err);
-      return response.error(callback, createError(401, 'Unauthorized'));
+      response.error(callback, createError(401, 'Unauthorized'));
+      return;
     }
 
     if (!userId) {
-      logger.warn('no user found for token: ', token, event.headers);
-      return response.error(callback, createError(401, 'Unauthorized'));
+      logger.error('no user found for token: ', token, event.headers);
+      response.error(callback, createError(401, 'Unauthorized'));
+      return;
     }
 
-    const authResponse = generatePolicy('user', 'Allow', event.methodArn);
+    const defaultResource = event.methodArn;
+    const resource = config.sessionToken.resourceArn || defaultResource;
+
+    const authResponse = generatePolicy('user', 'Allow', resource);
     authResponse.context = {
       userId
     };
-    return callback(null, authResponse);
+
+    logger.debug('Policy', {authResponse});
+    context.succeed(authResponse);
   };
 
   return {

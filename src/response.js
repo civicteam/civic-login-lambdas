@@ -27,7 +27,7 @@ module.exports = logger => {
     // https://forums.aws.amazon.com/thread.jspa?threadID=226689
     // return callback(null, response);
 
-    return callback('Unauthorized');
+    callback('Unauthorized');
   };
 
   return {
