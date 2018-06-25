@@ -84,11 +84,12 @@ module.exports = (loggerInstance, config, loginCallback) => {
   const login = (event, context, callback) => {
     if (event.source && event.source === 'serverless-plugin-warmup') {
       logger.info('WarmUP - Lambda is being kept warm!');
-      return callback(null, 'Lambda is being kept warm!');
+      callback(null, 'Lambda is being kept warm!');
+      return;
     }
     logger.info('event: ', event);
 
-    return co(function*() {
+    co(function*() {
       const body = JSON.parse(event.body) || {};
 
       const { authToken } = body;
@@ -128,10 +129,13 @@ module.exports = (loggerInstance, config, loginCallback) => {
     })
       .then(payload => response.json(callback, payload, 200))
       .catch(error => {
-        if (error.status) return response.error(callback, error);
+        if (error.status) {
+          response.error(callback, error);
+          return;
+        }
 
         logger.error(error);
-        return response.error(callback, createError(500, 'Internal Server Error'));
+        response.error(callback, createError(500, 'Internal Server Error'));
       });
   };
 
@@ -237,7 +241,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
       userId
     };
 
-    logger.debug('Policy', {authResponse});
+    logger.debug('Policy', { authResponse });
     context.succeed(authResponse);
   };
 
