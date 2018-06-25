@@ -52,24 +52,26 @@ where config is a JS object that looks like:
     login: {
       app: {
         appId: The appId you receive when setting up your app on integrate.civic.com,
-        appSecret: The app secret from integrate.civic.com
+        appSecret: The app secret from integrate.civic.com*
         pubKey: Your signing public key from integrate.civic.com
-        prvKey: Your signing private key from integrate.civic.com
+        prvKey: Your signing private key from integrate.civic.com*
         encPubKey: Your encryption public key from integrate.civic.com
-        encPrvKey: Your encryption private key from integrate.civic.com
+        encPrvKey: Your encryption private key from integrate.civic.com*
       },
       sessionToken: {
         issuer: your-app,
         audience: your-app-url,
         subject: your-app-session-token,
-        prvKey: the session token private key  ***NOTE - keep this secret!***
+        prvKey: the session token private key*
         pubKey: the session token public key
       }
     }
 }
 ```
 Note - the session token issuer, audience and subject are not used in the token verification. You can set any values you like here.
-Warning - the appSecret, prvKey, encPrvKey and sessionToken.prvKey are all sensitive values that could compromise the security of your application if shared.
+
+
+* Warning - the appSecret, prvKey, encPrvKey and sessionToken.prvKey are all sensitive values that could compromise the security of your application if shared.
 These should not be checked in to source code.
 3.
 
