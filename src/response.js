@@ -1,23 +1,33 @@
+function makeResponse(statusCode, data) {
+  const response = {
+    statusCode,
+    headers: {
+      'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+      'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  };
+  return response;
+}
+
 module.exports = logger => {
   const json = (callback, data, statusCode) => {
-    const response = {
-      statusCode,
-      headers: {
-        'Access-Control-Allow-Origin': '*', // Required for CORS support to work
-        'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    };
+    const response = makeResponse(statusCode, data);
 
     return callback(null, response);
   };
 
   const error = (callback, httpError) => {
-    const response = {
-      statusCode: httpError.status,
-      body: JSON.stringify({ message: httpError.message })
-    };
+    const response = makeResponse(httpError.status, { message: httpError.message });
+
+    logger.error('Error: ', JSON.stringify(response));
+
+    callback(response);
+  };
+
+  const customAuthorizerError = (callback, httpError) => {
+    const response = makeResponse(httpError.status, { message: httpError.message });
 
     logger.error('Error: ', JSON.stringify(response));
     logger.error('Error reported to client: Unauthorized');
@@ -32,6 +42,7 @@ module.exports = logger => {
 
   return {
     error,
+    customAuthorizerError,
     json
   };
 };
