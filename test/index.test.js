@@ -57,8 +57,6 @@ const loginAndGetUserId = async token => {
     {}
   );
 
-  console.log(login);
-
   let authResp = null;
   await loginHandler.sessionAuthorizer(
     {
@@ -112,10 +110,6 @@ describe('Login Handler Functions', () => {
         const responsePromise = loginPromise(validLoginEvent, {});
 
         return expect(responsePromise).to.be.rejected;
-
-        // Consider reenabling once
-        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-        // expect(response.statusCode).to.equal(400);
       });
     });
 
