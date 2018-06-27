@@ -17,9 +17,11 @@ describe('Response Functions', () => {
 
     error(callback, createError(400, errorMessage));
 
-    console.log(errorResponse);
-    expect(errorResponse.statusCode).to.equal(400);
-    expect(JSON.parse(errorResponse.body).message).to.equal(errorMessage);
+    // the error is passed in the response (not error) parameter to the callback
+    // as we are creating a response with a specific error code and not
+    // relying on API Gateway to do that for us
+    expect(dataResponse.statusCode).to.equal(400);
+    expect(JSON.parse(dataResponse.body).message).to.equal(errorMessage);
   });
 
   it('should parse an error response for the custom authorizor', () => {

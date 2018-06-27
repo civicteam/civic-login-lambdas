@@ -23,7 +23,7 @@ module.exports = logger => {
 
     logger.error('Error: ', JSON.stringify(response));
 
-    callback(response);
+    callback(null, response);
   };
 
   const customAuthorizerError = (callback, httpError) => {

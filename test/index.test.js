@@ -94,7 +94,7 @@ describe('Login Handler Functions', () => {
     it('should reject login with no auth Token', () => {
       const responsePromise = loginPromise(loginEventMissingAuthToken, {});
 
-      return expect(responsePromise).to.be.rejected;
+      return expect(responsePromise).to.eventually.have.property('statusCode', 401);
     });
 
     describe('with an invalid token', () => {
@@ -109,7 +109,7 @@ describe('Login Handler Functions', () => {
       it('returns an error on an unverified token', () => {
         const responsePromise = loginPromise(validLoginEvent, {});
 
-        return expect(responsePromise).to.be.rejected;
+        return expect(responsePromise).to.eventually.have.property('statusCode', 400);
       });
     });
 
@@ -150,22 +150,18 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().throws(Error('some error occurred during login'));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        let caughtError = null;
-        // eslint-disable-next-line no-return-assign
-        await promisify(loginHandlerWithCallback.login)(validLoginEvent, {}).catch(e => (caughtError = e));
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
-        expect(caughtError.statusCode).to.equal(500);
+        expect(response.statusCode).to.equal(500);
       });
 
       it('should rethrow the error from the login callback if it has a status', async () => {
         const loginCallback = sinon.stub().throws(createError(401, 'some error occurred during login'));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        let caughtError = null;
-        // eslint-disable-next-line no-return-assign
-        await promisify(loginHandlerWithCallback.login)(validLoginEvent, {}).catch(e => (caughtError = e));
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
-        expect(caughtError.statusCode).to.equal(401);
+        expect(response.statusCode).to.equal(401);
       });
 
       it('should handle a rejected promise by the login callback the same as a thrown error', async () => {
@@ -174,11 +170,9 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().returns(rejectedPromise);
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        let caughtError = null;
-        // eslint-disable-next-line no-return-assign
-        await promisify(loginHandlerWithCallback.login)(validLoginEvent, {}).catch(e => (caughtError = e));
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
-        expect(caughtError.statusCode).to.equal(401);
+        expect(response.statusCode).to.equal(401);
       });
 
       it('should add any result from the login callback to the login response body', async () => {
