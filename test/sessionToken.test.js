@@ -6,11 +6,10 @@ const { config } = require('./assets/tests').indexTest;
 
 // this proxy intercepts all function calls, and returns a function that does nothing,
 // thereby switching off logging.
-const silentLogger = new Proxy({}, { get: () => () => {} } );
+const silentLogger = new Proxy({}, { get: () => () => {} });
 const sessionToken = session(config.sessionToken, silentLogger);
 
 describe('SessionToken Functions', () => {
-
   it('should set the user Id as the token subject', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
