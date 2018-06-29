@@ -65,21 +65,15 @@ module.exports = (loggerInstance, config, loginCallback) => {
   }
 
   /**
-   * @api {post} admin/login  /../login (POST)
-   * @apiDescription login into the admin portal
-   * @apiName Login
-   * @apiGroup _Admin_
-   *
+   * Log in into the portal
    * @apiParam (body) {String} authToken token received from civic-sip-js
-   *
    * @apiParamExample {json} example:
    *     {
    *       "authToken": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpX..."
    *     }
-
-   * @param {Object} event
-   * @param {Object} context
-   * @param {Function} callback
+   * @param {Object} event The API Gateway event
+   * @param {Object} context The AWS Lambda context object
+   * @param {Function} callback Called with the login response or error
    */
   const login = (event, context, callback) => {
     if (event.source && event.source === 'serverless-plugin-warmup') {
@@ -87,8 +81,6 @@ module.exports = (loggerInstance, config, loginCallback) => {
       callback(null, 'Lambda is being kept warm!');
       return;
     }
-    logger.info('event: ', event);
-
     co(function*() {
       const body = JSON.parse(event.body) || {};
 
@@ -114,7 +106,6 @@ module.exports = (loggerInstance, config, loginCallback) => {
       // auth token, to allow the caller to add custom business logic
       // or validation around login
       const loginCallbackResponse = yield validateAndCallLoginCallback(event, userData);
-
       const { sessionTokenContents, loginResponse } = extractResponse(loginCallbackResponse, userData);
 
       const token = sessionToken.create(sessionTokenContents);
@@ -127,7 +118,9 @@ module.exports = (loggerInstance, config, loginCallback) => {
         loginResponse
       );
     })
-      .then(payload => response.json(callback, payload, 200))
+      .then(payload => {
+        response.json(callback, payload, 200);
+      })
       .catch(error => {
         if (error.status) {
           response.error(callback, error);
@@ -214,7 +207,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
     const token = event.authorizationToken;
     if (!token) {
       logger.error('no token provided', event.headers);
-      response.error(callback, createError(401, 'Unauthorized'));
+      response.customAuthorizerError(callback, createError(401, 'Unauthorized'));
       return;
     }
 
@@ -223,13 +216,13 @@ module.exports = (loggerInstance, config, loginCallback) => {
       userId = sessionToken.validate(token);
     } catch (err) {
       logger.error('session token validate error: ', token, err);
-      response.error(callback, createError(401, 'Unauthorized'));
+      response.customAuthorizerError(callback, createError(401, 'Unauthorized'));
       return;
     }
 
     if (!userId) {
       logger.error('no user found for token: ', token, event.headers);
-      response.error(callback, createError(401, 'Unauthorized'));
+      response.customAuthorizerError(callback, createError(401, 'Unauthorized'));
       return;
     }
 
@@ -241,8 +234,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
       userId
     };
 
-    logger.debug('Policy', { authResponse });
-    context.succeed(authResponse);
+    callback(null, authResponse);
   };
 
   return {

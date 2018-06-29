@@ -4,7 +4,7 @@ const createError = require('http-errors');
 const response = require('../src/response');
 
 describe('Response Functions', () => {
-  const { error, json } = response(winston);
+  const { error, customAuthorizerError, json } = response(winston);
   let dataResponse;
   let errorResponse;
   const callback = (callbackError, callbackResponse) => {
@@ -17,12 +17,19 @@ describe('Response Functions', () => {
 
     error(callback, createError(400, errorMessage));
 
-    expect(errorResponse).to.equal('Unauthorized');
+    // the error is passed in the response (not error) parameter to the callback
+    // as we are creating a response with a specific error code and not
+    // relying on API Gateway to do that for us
+    expect(dataResponse.statusCode).to.equal(400);
+    expect(JSON.parse(dataResponse.body).message).to.equal(errorMessage);
+  });
 
-    // Consider reenabling once
-    // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-    // expect(errorResponse.statusCode).to.equal(400);
-    // expect(errorResponse.message).to.equal(errorMessage);
+  it('should parse an error response for the custom authorizor', () => {
+    const errorMessage = 'some error';
+
+    customAuthorizerError(callback, createError(400, errorMessage));
+
+    expect(errorResponse).to.equal('Unauthorized');
   });
 
   it('should parse json response', () => {

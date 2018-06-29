@@ -44,17 +44,11 @@ const stubCivicClientInvalidToken = {
   }
 };
 
-let authResp;
-const lambdaContext = {
-  succeed: result => {
-    authResp = result;
-  }
-};
-
 const loginHandler = handler(logger, config, () => {});
+const loginPromise = promisify(loginHandler.login);
 
 const loginAndGetUserId = async token => {
-  const login = await promisify(loginHandler.login)(
+  const login = await loginPromise(
     {
       body: JSON.stringify({
         authToken: token
@@ -63,11 +57,15 @@ const loginAndGetUserId = async token => {
     {}
   );
 
-  loginHandler.sessionAuthorizer(
+  let authResp = null;
+  await loginHandler.sessionAuthorizer(
     {
       authorizationToken: JSON.parse(login.body).sessionToken
     },
-    lambdaContext
+    {},
+    (err, response) => {
+      authResp = response;
+    }
   );
 
   return {
@@ -88,8 +86,6 @@ describe('Login Handler Functions', () => {
   };
 
   describe('login', () => {
-    const loginPromise = promisify(loginHandler.login);
-
     it('should keep lambda warm with source event', async () => {
       const response = await loginPromise(sampleWarmEvent, {});
       expect(response).to.equal('Lambda is being kept warm!');
@@ -98,12 +94,7 @@ describe('Login Handler Functions', () => {
     it('should reject login with no auth Token', () => {
       const responsePromise = loginPromise(loginEventMissingAuthToken, {});
 
-      return expect(responsePromise).to.be.rejectedWith('Unauthorized');
-
-      // Consider reenabling once
-      // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-      // expect(response.statusCode).to.equal(401);
-      // expect(JSON.parse(response.body).message).to.equal('no authToken provided');
+      return expect(responsePromise).to.eventually.have.property('statusCode', 401);
     });
 
     describe('with an invalid token', () => {
@@ -116,13 +107,9 @@ describe('Login Handler Functions', () => {
       });
 
       it('returns an error on an unverified token', () => {
-        const responsePromise = loginPromise(validLoginEvent, lambdaContext);
+        const responsePromise = loginPromise(validLoginEvent, {});
 
-        return expect(responsePromise).to.be.rejectedWith('Unauthorized');
-
-        // Consider reenabling once
-        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-        // expect(response.statusCode).to.equal(400);
+        return expect(responsePromise).to.eventually.have.property('statusCode', 400);
       });
     });
 
@@ -136,7 +123,7 @@ describe('Login Handler Functions', () => {
       });
 
       it('login successfully given a valid authToken', async () => {
-        const response = await loginPromise(validLoginEvent, lambdaContext);
+        const response = await loginPromise(validLoginEvent, {});
         expect(response.statusCode).to.equal(200);
         expect(JSON.parse(response.body)).to.be.an('object');
         expect(JSON.parse(response.body).sessionToken).to.be.an('string');
@@ -146,7 +133,7 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().returns(Promise.resolve({}));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        await promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
         expect(loginCallback.called).to.equal(true);
       });
@@ -155,49 +142,37 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().returns(null);
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
         expect(response.statusCode).to.equal(200);
       });
 
-      it('should throw an error if the login callback fails with some random error', () => {
+      it('should throw an error if the login callback fails with some random error', async () => {
         const loginCallback = sinon.stub().throws(Error('some error occurred during login'));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        const responsePromise = promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
-        return expect(responsePromise).to.be.rejectedWith('Unauthorized');
-
-        // Consider reenabling once
-        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-        // expect(response.statusCode).to.equal(500);
+        expect(response.statusCode).to.equal(500);
       });
 
-      it('should rethrow the error from the login callback if it has a status', () => {
+      it('should rethrow the error from the login callback if it has a status', async () => {
         const loginCallback = sinon.stub().throws(createError(401, 'some error occurred during login'));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        const responsePromise = promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
-        return expect(responsePromise).to.be.rejectedWith('Unauthorized');
-
-        // Consider reenabling once
-        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-        // expect(response.statusCode).to.equal(401);
+        expect(response.statusCode).to.equal(401);
       });
 
-      it('should handle a rejected promise by the login callback the same as a thrown error', () => {
+      it('should handle a rejected promise by the login callback the same as a thrown error', async () => {
         const rejectedPromise = Promise.reject(createError(401, 'some error occurred during login'));
 
         const loginCallback = sinon.stub().returns(rejectedPromise);
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        const responsePromise = promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
-        return expect(responsePromise).to.be.rejectedWith('Unauthorized');
-
-        // Consider reenabling once
-        // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-        // expect(response.statusCode).to.equal(401);
+        expect(response.statusCode).to.equal(401);
       });
 
       it('should add any result from the login callback to the login response body', async () => {
@@ -207,7 +182,7 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
         const bodyJSON = JSON.parse(response.body);
         expect(bodyJSON.someKey).to.equal(loginCallbackResult.someKey);
@@ -226,7 +201,7 @@ describe('Login Handler Functions', () => {
         const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+        const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
         const bodyJSON = JSON.parse(response.body);
         expect(bodyJSON.loginKey).to.equal(loginCallbackResult.loginResponse.loginKey);
@@ -247,7 +222,7 @@ describe('Login Handler Functions', () => {
           const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
           const loginHandlerWithCallback = handler(logger, config, loginCallback);
 
-          const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, lambdaContext);
+          const response = await promisify(loginHandlerWithCallback.login)(validLoginEvent, {});
 
           const bodyJSON = JSON.parse(response.body);
           const token = bodyJSON.sessionToken;
@@ -312,12 +287,8 @@ describe('Login Handler Functions', () => {
         }
       });
 
-      expect(keepAliveResponse).to.equal('Unauthorized');
-
-      // Consider reenabling once
-      // https://forums.aws.amazon.com/thread.jspa?threadID=226689 is resolved
-      // expect(keepAliveResponse.statusCode).to.equal(401);
-      // expect(JSON.parse(keepAliveResponse.body).message).to.deep.equal('Unauthorized');
+      expect(keepAliveResponse.statusCode).to.equal(401);
+      expect(JSON.parse(keepAliveResponse.body).message).to.deep.equal('Unauthorized');
     });
   });
 
@@ -330,9 +301,9 @@ describe('Login Handler Functions', () => {
       civicSip.newClient.restore();
     });
 
-    const sessionAuthorizer = (event, context = lambdaContext) =>
+    const sessionAuthorizer = event =>
       new Promise(resolve => {
-        loginHandler.sessionAuthorizer(event, context, (error, response) => {
+        loginHandler.sessionAuthorizer(event, {}, (error, response) => {
           // resolve rather than reject here as we still produce an http response
           if (error) resolve(error);
 
@@ -342,11 +313,11 @@ describe('Login Handler Functions', () => {
 
     it('should authorize a valid sessionToken', async () => {
       const loginResponse = await loginAndGetUserId(authToken);
-      sessionAuthorizer({
+      const sessionAuthorizerResponse = await sessionAuthorizer({
         authorizationToken: loginResponse.sessionToken
       });
 
-      expect(authResp.principalId).to.equal('user');
+      expect(sessionAuthorizerResponse.principalId).to.equal('user');
     });
 
     it('should return a 401 on an invalid sessionToken', async () => {
