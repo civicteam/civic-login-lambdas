@@ -24,7 +24,7 @@ module.exports = (sessionConfig, logger) => {
     return jwt.createToken(
       sessionConfig.issuer,
       sessionConfig.audience,
-      sessionConfig.subject,
+      sessionTokenContentObj.userId,
       expiration,
       payload,
       sessionConfig.prvKey
@@ -41,8 +41,9 @@ module.exports = (sessionConfig, logger) => {
     }
     const decoded = jwt.decode(token);
 
-    if (decoded && decoded.payloadObj && decoded.payloadObj.data) {
-      return decoded.payloadObj.data.userId;
+    // the subject is the userID
+    if (decoded && decoded.payloadObj && decoded.payloadObj.sub) {
+      return decoded.payloadObj.sub;
     }
     logger.warn('Validate decode: payload not decoded - ', decoded);
     return false;
