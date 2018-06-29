@@ -4,16 +4,18 @@ const { expect } = require('chai');
 const session = require('../src/sessionToken');
 const { config } = require('./assets/tests').indexTest;
 
-const sessionToken = session(config.sessionToken);
+// this proxy intercepts all function calls, and returns a function that does nothing,
+// thereby switching off logging.
+const silentLogger = new Proxy({}, { get: () => () => {} } );
+const sessionToken = session(config.sessionToken, silentLogger);
+
 describe('SessionToken Functions', () => {
-  it('should create a valid session token from a user Id', () => {
+
+  it('should set the user Id as the token subject', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
-    expect(token).to.not.be.undefined;
-    expect(token).to.be.a('string');
     const userId = sessionToken.validate(token);
     expect(origUserId).to.equal(userId);
-    expect(sessionToken.test.verify(token, 60)).to.be.true;
   });
 
   it('should create a valid session token from an object containing a user Id', () => {
@@ -22,39 +24,27 @@ describe('SessionToken Functions', () => {
       userId: origUserId
     };
     const token = sessionToken.create(sessionTokenContents, '1m');
-    expect(token).to.not.be.undefined;
     expect(token).to.be.a('string');
-    const userId = sessionToken.validate(token);
-    expect(origUserId).to.equal(userId);
-    expect(sessionToken.test.verify(token, 60)).to.be.true;
+    expect(sessionToken.validate(token)).not.to.be.false;
   });
 
-  it('should validate an expired session token', () => {
+  it('should fail to validate an expired session token', () => {
     const origUserId = 'userid-1';
-    const token = sessionToken.create(origUserId, '1s');
-    expect(token).to.not.be.undefined;
-    expect(token).to.be.a('string');
-    const userId = sessionToken.validate(token);
-    expect(origUserId).to.equal(userId);
-    expect(sessionToken.test.verify(token, 1)).to.be.true;
+    const token = sessionToken.create(origUserId, '-1d');
+    expect(sessionToken.validate(token)).to.be.false;
   });
 
   it('should validate an session token from event', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
-    expect(token).to.not.be.undefined;
-    expect(token).to.be.a('string');
     const userId = sessionToken.validateFromEvent({ headers: { Authorization: token } });
     expect(origUserId).to.equal(userId);
-    expect(sessionToken.test.verify(token, 60)).to.be.true;
   });
 
   it('should renew an session token from event', () => {
     const origUserId = 'userid-1';
     const token = sessionToken.create(origUserId, '1m');
-    expect(token).to.not.be.undefined;
-    expect(token).to.be.a('string');
     const newToken = sessionToken.keepAliveFromEvent({ headers: { Authorization: token } });
-    expect(sessionToken.test.verify(newToken, 60)).to.be.true;
+    expect(sessionToken.validate(newToken)).not.to.be.false;
   });
 });
