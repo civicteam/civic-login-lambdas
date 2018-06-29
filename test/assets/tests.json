@@ -10,7 +10,6 @@
       "sessionToken": {
         "issuer": "",
         "audience": "",
-        "subject": "",
         "pubKey": "0403eaecceb589599323125f6cd891816eeccf785a931f816769bf36d34fa7a74f5e4ecf46cf30d170cb61cd21b33525b825f9e1641031fa1acd57654b4b552278",
         "prvKey": "b75e40dbc38af78efc99f78ef89d5f8884c45d188f7afe596bd981f8195131dc"
       },

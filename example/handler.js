@@ -14,7 +14,6 @@ const config = {
     sessionToken: {
       issuer: 'my-app-session-token',
       audience: 'https://my-url',
-      subject: 'my-app-session-token',
       prvKey: '*** Your session token private key',
       pubKey: '*** Your session token public key'
     }
