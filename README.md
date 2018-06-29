@@ -61,14 +61,14 @@ where config is a JS object that looks like:
       sessionToken: {
         issuer: your-app,
         audience: your-app-url,
-        subject: your-app-session-token,
         prvKey: the session token private key*
         pubKey: the session token public key
       }
     }
 }
 ```
-Note - the session token issuer, audience and subject are not used in the token verification. You can set any values you like here.
+Note - the session token issuer and audience are not used in the token verification. You can set any values you like here.
+The subject of the token will be the user ID passed from Civic.
 
 
 * Warning - the appSecret, prvKey, encPrvKey and sessionToken.prvKey are all sensitive values that could compromise the security of your application if shared.
