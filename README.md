@@ -19,7 +19,7 @@ See /example for an example using the Serverless framework.
 
 ## Getting Started
 
-1. Generate a session token key pair using:
+### Step 1. Generate a session token key pair using:
 
 ```
 node node_modules/civic-login-lambdas/scripts/generateSessionTokenKeyPair.js
@@ -28,7 +28,7 @@ node node_modules/civic-login-lambdas/scripts/generateSessionTokenKeyPair.js
 The session token signer uses an ECDSA signing algorithm using the secp256r1 ECC curve.
 Note - the private key must be kept secret. If it is compromised, an attacker could generate a token that would be accepted by your back-end services.
 
-2.
+### Step 2. Add a login handler:
 
 loginHandler.js
 
@@ -63,6 +63,7 @@ where config is a JS object that looks like:
         audience: your-app-url,
         prvKey: the session token private key*
         pubKey: the session token public key
+        resourceArn: [Optional] the ARN pattern of the lambdas that should be authorised using this session token (see below: sessionAuthorizer policy generation)
       }
     }
 }
@@ -70,10 +71,10 @@ where config is a JS object that looks like:
 Note - the session token issuer and audience are not used in the token verification. You can set any values you like here.
 The subject of the token will be the user ID passed from Civic.
 
-
 * Warning - the appSecret, prvKey, encPrvKey and sessionToken.prvKey are all sensitive values that could compromise the security of your application if shared.
 These should not be checked in to source code.
-3.
+
+### Step 3. Register the login handler lambdas
 
 If using the [Serverless Framework](https://serverless.com/):
 
@@ -138,6 +139,34 @@ function loginCallback(event, userData) {
   return new LoginData(loginResponse, sessionTokenContents);
 }
 ```
+
+### sessionAuthorizer policy generation
+
+The session authorizer validates the session token and generates a policy document that tells API Gateway which lambdas
+can be accessed by the session token. By default, this is the methodARN on the event, i.e. the ARN of the lambda which
+is being accessed.
+
+This works fine, except that the policy document is then cached by API Gateway for a particular
+session token. This means that if you then use the same session token for a second lambda, API Gateway retrieves the
+cached policy document that allows access only to the first lambda, and denies access.
+
+There are two ways to solve this:
+
+1. Prevent caching of the policy by setting the TTL to 0
+(see [here](https://serverless.com/framework/docs/providers/aws/events/apigateway/#http-endpoints-with-custom-authorizers))
+This has an effect on performance.
+
+2. Set the resourceARN to cover all lambdas that you wish to authorise in the sessionToken config 'resourceARN' property.
+
+The property should look something like this:
+
+```
+arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function/${self:service}-${opt:stage, self:provider.stage}-*
+```
+
+You can either set this explicitly in the configuration (substituting all the variables above), or add the above line
+to serverless.yml as an environment variable (use the [serverless-cf-vars](https://www.npmjs.com/package/serverless-cf-vars) plugin
+to substitute the AWS properties), and refer to that environment variable in your code.
 
 ### Linting 
 
