@@ -56,8 +56,9 @@ exports.createToken = (issuer, audience, subject, expiresIn, payload, prvKeyHex)
 };
 
 /**
- *  verify the authenticity of the token using the verifying key
- *  pubhex.
+ * Verify the authenticity of the token using the verifying key
+ * pubhex. This also verifies the expire time of the token
+ * @see https://github.com/kjur/jsrsasign/blob/master/src/jws-3.3.js
  *
  * @param token
  * @param pubhex
