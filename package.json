@@ -1,6 +1,6 @@
 {
   "name": "@civic/login-lambdas",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Integrate civic login in serverless applications",
   "main": "src/index.js",
   "scripts": {
