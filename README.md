@@ -11,7 +11,7 @@ https://github.com/civicteam/civic-login-redux for a Redux example.
 
 ## Installation
 
-run `npm install civic-login-lambdas`
+run `npm install @civic/login-lambdas`
 
 ## Example
 
