@@ -46,4 +46,17 @@ describe('SessionToken Functions', () => {
     const newToken = sessionToken.keepAliveFromEvent({ headers: { Authorization: token } });
     expect(sessionToken.validate(newToken)).not.to.be.false;
   });
+  it('should validate an session token from event with lower case authorization header', () => {
+    const origUserId = 'userid-1';
+    const token = sessionToken.create(origUserId, '1m');
+    const userId = sessionToken.validateFromEvent({ headers: { authorization: token } });
+    expect(origUserId).to.equal(userId);
+  });
+
+  it('should renew an session token from event with lower case authorization header', () => {
+    const origUserId = 'userid-1';
+    const token = sessionToken.create(origUserId, '1m');
+    const newToken = sessionToken.keepAliveFromEvent({ headers: { authorization: token } });
+    expect(sessionToken.validate(newToken)).not.to.be.false;
+  });
 });
