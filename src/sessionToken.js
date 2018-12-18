@@ -58,10 +58,14 @@ module.exports = (sessionConfig, logger) => {
   };
 
   const validateFromEvent = event => {
-    if (!event || !event.headers || !event.headers.Authorization) {
+    if (!event || !event.headers) {
       return false;
     }
-    const token = event.headers.Authorization;
+    // http sends authorization via lower case a, so need to make sure to check both cases
+    const token = event.headers.Authorization ? event.headers.Authorization : event.headers.authorization;
+    if (!token) {
+      return false;
+    }
 
     return validate(token);
   };
@@ -70,7 +74,7 @@ module.exports = (sessionConfig, logger) => {
     if (!event || !event.headers) {
       return false;
     }
-    const token = event.headers.Authorization;
+    const token = event.headers.Authorization ? event.headers.Authorization : event.headers.authorization;
 
     return keepAlive(token);
   };
