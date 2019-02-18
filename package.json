@@ -13,6 +13,7 @@
   },
   "author": "Daniel Kelleher",
   "license": "ISC",
+  "repository": "https://github.com/civicteam/civic-login-lambdas",
   "dependencies": {
     "civic-sip-api": "civicteam/npm-civic-sip-api#v1.0.1",
     "co": "^4.6.0",
@@ -20,7 +21,7 @@
     "json-stable-stringify": "latest",
     "jsrsasign": "latest",
     "jwt-js": "latest",
-    "lodash": "^4.17.5",
+    "lodash": "^4.17.11",
     "unix-timestamp": "latest",
     "uuid": "latest"
   },
@@ -40,22 +41,16 @@
     "eslint-plugin-prettier": "^2.6.0",
     "json-stable-stringify": "latest",
     "mocha": "^5.1.1",
-    "nyc": "^13.1.0",
+    "nyc": "^13.3.0",
     "prettier": "^1.12.1",
-    "sinon": "^4.5.0",
+    "sinon": "^7.2.3",
     "winston": "^2.4.2"
   },
   "nyc": {
     "lines": 85,
     "statements": 85,
     "functions": 85,
-    "branches": 75,
-    "exclude": [
-      "test/*"
-    ],
-    "include": [
-      "./src/*"
-    ]
+    "branches": 75
   },
   "eslintConfig": {
     "extends": [
