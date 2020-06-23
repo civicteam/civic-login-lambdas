@@ -1,4 +1,4 @@
-const uuidV4 = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const _ = require('lodash');
 const jwt = require('./jwt');
 
@@ -16,7 +16,7 @@ module.exports = (sessionConfig, logger) => {
     const payload = _.merge(
       {},
       {
-        sessionId: uuidV4()
+        sessionId: uuid()
       },
       sessionTokenContentObj
     );

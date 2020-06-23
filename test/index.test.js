@@ -1,7 +1,7 @@
 const { promisify } = require('util');
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
-const uuidV4 = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const sinon = require('sinon');
 const Winston = require('winston');
 
@@ -16,7 +16,7 @@ const { appId, config } = require('./assets/tests').indexTest;
 
 chai.use(chaiAsPromised);
 const { expect } = chai;
-const authCode = uuidV4();
+const authCode = uuid();
 
 const payload = {
   codeToken: authCode
