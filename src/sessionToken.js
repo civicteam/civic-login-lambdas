@@ -16,7 +16,7 @@ module.exports = (sessionConfig, logger) => {
     const payload = _.merge(
       {},
       {
-        sessionId: uuid()
+        sessionId: uuid(),
       },
       sessionTokenContentObj
     );
@@ -34,7 +34,7 @@ module.exports = (sessionConfig, logger) => {
   const verify = (jwToken, gracePeriod = JWT_GRACE_PERIOD) =>
     jwt.verify(jwToken, sessionConfig.pubKey, { gracePeriod });
 
-  const validate = token => {
+  const validate = (token) => {
     if (!token || !verify(token)) {
       logger.warn('Validate: No token found or token unverified - ', token);
       return false;
@@ -57,7 +57,7 @@ module.exports = (sessionConfig, logger) => {
     return create(userId, expiration);
   };
 
-  const validateFromEvent = event => {
+  const validateFromEvent = (event) => {
     if (!event || !event.headers) {
       return false;
     }
@@ -70,7 +70,7 @@ module.exports = (sessionConfig, logger) => {
     return validate(token);
   };
 
-  const keepAliveFromEvent = event => {
+  const keepAliveFromEvent = (event) => {
     if (!event || !event.headers) {
       return false;
     }
@@ -87,7 +87,7 @@ module.exports = (sessionConfig, logger) => {
     keepAliveFromEvent,
     // unit testing only
     test: {
-      verify
-    }
+      verify,
+    },
   };
 };

@@ -24,7 +24,7 @@ exports.createToken = (issuer, audience, subject, expiresIn, payload, prvKeyHex)
     iss: issuer,
     aud: audience,
     sub: subject,
-    data: payload
+    data: payload,
   };
 
   const header = { alg: ALGO, typ: 'JWT' };
@@ -74,4 +74,4 @@ exports.verify = (token, pubhex, acceptable) => {
   return rs.jws.JWS.verifyJWT(token, pubKey, options);
 };
 
-exports.decode = token => rs.jws.JWS.parse(token);
+exports.decode = (token) => rs.jws.JWS.parse(token);

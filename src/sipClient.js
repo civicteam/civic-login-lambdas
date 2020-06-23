@@ -4,7 +4,7 @@ const exchangeCode = (optionsIn, authToken) => {
   const options = {
     appId: optionsIn.appId,
     appSecret: optionsIn.appSecret,
-    prvKey: optionsIn.prvKey
+    prvKey: optionsIn.prvKey,
   };
 
   if (optionsIn.env !== 'prod') {
@@ -17,5 +17,5 @@ const exchangeCode = (optionsIn, authToken) => {
 };
 
 module.exports = {
-  exchangeCode
+  exchangeCode,
 };

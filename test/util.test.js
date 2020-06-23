@@ -8,16 +8,16 @@ const userData = {
       label: 'contact.personal.email',
       value: 'myemail@yahoo.com',
       isValid: true,
-      isOwner: true
+      isOwner: true,
     },
     {
       label: 'contact.personal.phoneNumber',
       value: '+44 555666333',
       isValid: true,
-      isOwner: true
-    }
+      isOwner: true,
+    },
   ],
-  userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650'
+  userId: '2a4243e4a9418d3f545b7d0f68c822197a9e24beeceea3b7ade7aa82bf662650',
 };
 
 describe('util.js', () => {

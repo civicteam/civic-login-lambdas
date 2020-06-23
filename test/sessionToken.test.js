@@ -20,7 +20,7 @@ describe('SessionToken Functions', () => {
   it('should create a valid session token from an object containing a user Id', () => {
     const origUserId = 'userid-1';
     const sessionTokenContents = {
-      userId: origUserId
+      userId: origUserId,
     };
     const token = sessionToken.create(sessionTokenContents, '1m');
     expect(token).to.be.a('string');
