@@ -1,5 +1,5 @@
 const rs = require('jsrsasign');
-const uuidV4 = require('uuid/v4');
+const { v4: uuid } = require('uuid');
 const timestamp = require('unix-timestamp');
 const _ = require('lodash');
 
@@ -18,7 +18,7 @@ exports.createToken = (issuer, audience, subject, expiresIn, payload, prvKeyHex)
   const until = timestamp.add(now, expiresIn);
 
   const content = {
-    jti: uuidV4(),
+    jti: uuid(),
     iat: now,
     exp: until,
     iss: issuer,
