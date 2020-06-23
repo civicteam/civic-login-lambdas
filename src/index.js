@@ -18,7 +18,7 @@ function loggerInstanceOrConsole(logger) {
     error: (...args) => console.error(...args),
     warn: (...args) => console.warn(...args),
     info: (...args) => console.info(...args),
-    debug: (...args) => console.info(...args)
+    debug: (...args) => console.info(...args),
   };
 }
 
@@ -29,7 +29,7 @@ function extractResponse(loginCallbackResponse, userData) {
   const authUserId = util.getUserIdFromUserData(userData);
   return {
     sessionTokenContents: { userId: authUserId },
-    loginResponse: loginCallbackResponse
+    loginResponse: loginCallbackResponse,
   };
 }
 
@@ -81,7 +81,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
       callback(null, 'Lambda is being kept warm!');
       return;
     }
-    co(function*() {
+    co(function* () {
       const body = JSON.parse(event.body) || {};
 
       const { authToken } = body;
@@ -113,15 +113,15 @@ module.exports = (loggerInstance, config, loginCallback) => {
       return _.assign(
         {},
         {
-          sessionToken: token
+          sessionToken: token,
         },
         loginResponse
       );
     })
-      .then(payload => {
+      .then((payload) => {
         response.json(callback, payload, 200);
       })
-      .catch(error => {
+      .catch((error) => {
         if (error.status) {
           response.error(callback, error);
           return;
@@ -171,7 +171,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
       return response.json(
         callback,
         {
-          sessionToken: token
+          sessionToken: token,
         },
         200
       );
@@ -184,7 +184,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
   /use-custom-authorizer.html#api-gateway-custom-authorizer-lambda-function-create */
   const generatePolicy = (principalId, effect, resource) => {
     const authResponse = {
-      principalId
+      principalId,
     };
 
     if (effect && resource) {
@@ -194,9 +194,9 @@ module.exports = (loggerInstance, config, loginCallback) => {
           {
             Action: 'execute-api:Invoke', // default action
             Effect: effect,
-            Resource: resource
-          }
-        ]
+            Resource: resource,
+          },
+        ],
       };
     }
 
@@ -231,7 +231,7 @@ module.exports = (loggerInstance, config, loginCallback) => {
 
     const authResponse = generatePolicy('user', 'Allow', resource);
     authResponse.context = {
-      userId
+      userId,
     };
 
     callback(null, authResponse);
@@ -241,6 +241,6 @@ module.exports = (loggerInstance, config, loginCallback) => {
     login,
     keepAlive,
     sessionAuthorizer,
-    sipClient
+    sipClient,
   };
 };

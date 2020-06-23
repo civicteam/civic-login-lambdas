@@ -4,14 +4,14 @@ function makeResponse(statusCode, data) {
     headers: {
       'Access-Control-Allow-Origin': '*', // Required for CORS support to work
       'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   };
   return response;
 }
 
-module.exports = logger => {
+module.exports = (logger) => {
   const json = (callback, data, statusCode) => {
     const response = makeResponse(statusCode, data);
 
@@ -43,6 +43,6 @@ module.exports = logger => {
   return {
     error,
     customAuthorizerError,
-    json
+    json,
   };
 };

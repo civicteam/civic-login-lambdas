@@ -19,7 +19,7 @@ const { expect } = chai;
 const authCode = uuid();
 
 const payload = {
-  codeToken: authCode
+  codeToken: authCode,
 };
 
 const authToken = jwt.createToken('my-service', 'hosted-url', appId, '10m', payload, 'hosted-expiry');
@@ -28,31 +28,31 @@ const sampleWarmEvent = {
   event: 'event',
   type: 'code',
   response: authToken,
-  source: 'serverless-plugin-warmup'
+  source: 'serverless-plugin-warmup',
 };
 
 const stubCivicClient = {
   exchangeCode: () => ({
     data: 'data',
-    userId: 'userId'
-  })
+    userId: 'userId',
+  }),
 };
 
 const stubCivicClientInvalidToken = {
   exchangeCode: () => {
     throw Error('Some token error');
-  }
+  },
 };
 
 const loginHandler = handler(logger, config, () => {});
 const loginPromise = promisify(loginHandler.login);
 
-const loginAndGetUserId = async token => {
+const loginAndGetUserId = async (token) => {
   const login = await loginPromise(
     {
       body: JSON.stringify({
-        authToken: token
-      })
+        authToken: token,
+      }),
     },
     {}
   );
@@ -60,7 +60,7 @@ const loginAndGetUserId = async token => {
   let authResp = null;
   await loginHandler.sessionAuthorizer(
     {
-      authorizationToken: JSON.parse(login.body).sessionToken
+      authorizationToken: JSON.parse(login.body).sessionToken,
     },
     {},
     (err, response) => {
@@ -70,19 +70,19 @@ const loginAndGetUserId = async token => {
 
   return {
     userId: authResp.context.userId,
-    sessionToken: JSON.parse(login.body).sessionToken
+    sessionToken: JSON.parse(login.body).sessionToken,
   };
 };
 
 describe('Login Handler Functions', () => {
   const validLoginEvent = {
     body: JSON.stringify({
-      authToken
-    })
+      authToken,
+    }),
   };
 
   const loginEventMissingAuthToken = {
-    body: JSON.stringify({})
+    body: JSON.stringify({}),
   };
 
   describe('login', () => {
@@ -177,7 +177,7 @@ describe('Login Handler Functions', () => {
 
       it('should add any result from the login callback to the login response body', async () => {
         const loginCallbackResult = {
-          someKey: 'someValue'
+          someKey: 'someValue',
         };
         const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
         const loginHandlerWithCallback = handler(logger, config, loginCallback);
@@ -192,10 +192,10 @@ describe('Login Handler Functions', () => {
       it('should add LoginData.loginResponse to the login response if the callback result is of type LoginData', async () => {
         const loginCallbackResult = new LoginData(
           {
-            loginKey: 'loginValue'
+            loginKey: 'loginValue',
           },
           {
-            sessionTokenKey: 'sessionTokenValue'
+            sessionTokenKey: 'sessionTokenValue',
           }
         );
         const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
@@ -213,10 +213,10 @@ describe('Login Handler Functions', () => {
         async () => {
           const loginCallbackResult = new LoginData(
             {
-              loginKey: 'loginValue'
+              loginKey: 'loginValue',
             },
             {
-              sessionTokenKey: 'sessionTokenValue'
+              sessionTokenKey: 'sessionTokenValue',
             }
           );
           const loginCallback = sinon.stub().returns(Promise.resolve(loginCallbackResult));
@@ -244,7 +244,7 @@ describe('Login Handler Functions', () => {
     });
 
     const keepAlive = (event, context) =>
-      new Promise(resolve => {
+      new Promise((resolve) => {
         loginHandler.keepAlive(event, context, (error, response) => {
           // resolve rather than reject here as we still produce an http response
           if (error) resolve(error);
@@ -261,13 +261,13 @@ describe('Login Handler Functions', () => {
       const login = await loginAndGetUserId(authToken);
       const keepAliveResponse = await keepAlive({
         headers: {
-          Authorization: login.sessionToken
+          Authorization: login.sessionToken,
         },
         requestContext: {
           authorizer: {
-            userId: login.userId
-          }
-        }
+            userId: login.userId,
+          },
+        },
       });
       expect(keepAliveResponse.statusCode).to.equal(200);
       expect(JSON.parse(keepAliveResponse.body)).to.be.an('object');
@@ -278,13 +278,13 @@ describe('Login Handler Functions', () => {
     it('should not renew a missing session token', async () => {
       const keepAliveResponse = await keepAlive({
         headers: {
-          Authorization: ''
+          Authorization: '',
         },
         requestContext: {
           authorizer: {
-            userId: ''
-          }
-        }
+            userId: '',
+          },
+        },
       });
 
       expect(keepAliveResponse.statusCode).to.equal(401);
@@ -301,8 +301,8 @@ describe('Login Handler Functions', () => {
       civicSip.newClient.restore();
     });
 
-    const sessionAuthorizer = event =>
-      new Promise(resolve => {
+    const sessionAuthorizer = (event) =>
+      new Promise((resolve) => {
         loginHandler.sessionAuthorizer(event, {}, (error, response) => {
           // resolve rather than reject here as we still produce an http response
           if (error) resolve(error);
@@ -314,7 +314,7 @@ describe('Login Handler Functions', () => {
     it('should authorize a valid sessionToken', async () => {
       const loginResponse = await loginAndGetUserId(authToken);
       const sessionAuthorizerResponse = await sessionAuthorizer({
-        authorizationToken: loginResponse.sessionToken
+        authorizationToken: loginResponse.sessionToken,
       });
 
       expect(sessionAuthorizerResponse.principalId).to.equal('user');
@@ -322,7 +322,7 @@ describe('Login Handler Functions', () => {
 
     it('should return a 401 on an invalid sessionToken', async () => {
       const response = await sessionAuthorizer({
-        authorizationToken: 'invalid'
+        authorizationToken: 'invalid',
       });
 
       expect(response).to.equal('Unauthorized');

@@ -1,6 +1,6 @@
 const _ = require('lodash');
 
-const getEmailFromUserData = userData => {
+const getEmailFromUserData = (userData) => {
   if (userData && _.isArray(userData.data)) {
     return _.find(userData.data, { label: 'contact.personal.email' });
   }
@@ -8,9 +8,9 @@ const getEmailFromUserData = userData => {
   return undefined;
 };
 
-const getUserIdFromUserData = userData => userData && userData.userId;
+const getUserIdFromUserData = (userData) => userData && userData.userId;
 
 module.exports = {
   getEmailFromUserData,
-  getUserIdFromUserData
+  getUserIdFromUserData,
 };

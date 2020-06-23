@@ -11,26 +11,20 @@ describe('sip Client Functions', () => {
     appSecret: 'sampleAppSecret',
     prvKey: 'samplePrvKey',
     env: '',
-    api: ''
+    api: '',
   };
 
   const authToken = response;
 
   before(() => {
     const stubClient = {
-      exchangeCode: sinon
-        .stub()
-        .withArgs(authToken)
-        .returns({
-          data: 'data',
-          userId: 'userId'
-        })
+      exchangeCode: sinon.stub().withArgs(authToken).returns({
+        data: 'data',
+        userId: 'userId',
+      }),
     };
 
-    sinon
-      .stub(civicSip, 'newClient')
-      .withArgs(configIn)
-      .returns(stubClient);
+    sinon.stub(civicSip, 'newClient').withArgs(configIn).returns(stubClient);
   });
 
   after(() => {

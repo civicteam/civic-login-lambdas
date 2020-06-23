@@ -9,15 +9,15 @@ const config = {
       pubKey: '*** Your signing public key from integrate.civic.com',
       prvKey: '*** Your signing private key from integrate.civic.com',
       encPubKey: '*** Your encryption public key from integrate.civic.com',
-      encPrvKey: '*** Your encryption private key from integrate.civic.com'
+      encPrvKey: '*** Your encryption private key from integrate.civic.com',
     },
     sessionToken: {
       issuer: 'my-app-session-token',
       audience: 'https://my-url',
       prvKey: '*** Your session token private key',
-      pubKey: '*** Your session token public key'
-    }
-  }
+      pubKey: '*** Your session token public key',
+    },
+  },
 };
 
 // Add any service-specific login business logic here.
@@ -41,7 +41,7 @@ function loginCallback(event, userData) {
 
   return {
     email,
-    userId
+    userId,
   };
 }
 
@@ -52,8 +52,8 @@ const hello = (event, context, callback) => {
     statusCode: 200,
     body: JSON.stringify({
       message: 'Go Serverless v1.0! Your function executed successfully!',
-      input: event
-    })
+      input: event,
+    }),
   };
 
   callback(null, response);
@@ -63,5 +63,5 @@ module.exports = {
   hello,
   login: authHandler.login,
   keepAlive: authHandler.keepAlive,
-  sessionAuthorizer: authHandler.sessionAuthorizer
+  sessionAuthorizer: authHandler.sessionAuthorizer,
 };
