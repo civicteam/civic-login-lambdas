@@ -12,4 +12,7 @@ Whenever you whitelist a specific advisory it is required to refer it here and j
 | #    | Level | Module | Title | Explanation |
 |------|-------|---------|------|-------------|
 | 658  | Moderate   | base64url  | Out-of-bounds Read | required by jwt-js            |
+| 1541  | Moderate   | jsrsasign  | Improper Verification of Cryptographic Signature | required by npm-civic-sip-api            |
+| 1505  | High   | jsrsasign  | Timing attack | required by npm-civic-sip-api            |
+| 1066  | High   | lodash.merge  | Prototype Pollution | required by jwt-js            |
 

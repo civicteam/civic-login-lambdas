@@ -18,11 +18,11 @@
     "civic-sip-api": "civicteam/npm-civic-sip-api#v1.0.1",
     "co": "^4.6.0",
     "http-errors": "^1.7.3",
-    "json-stable-stringify": "latest",
-    "jsrsasign": "latest",
-    "jwt-js": "latest",
+    "json-stable-stringify": "^1.0.1",
+    "jsrsasign": "^8.0.19",
+    "jwt-js": "^0.5.0",
     "lodash": "^4.17.15",
-    "unix-timestamp": "latest",
+    "unix-timestamp": "^0.2.0",
     "uuid": "^8.1.0"
   },
   "devDependencies": {
@@ -39,7 +39,6 @@
     "eslint-plugin-jsx-a11y": "^6.3.1",
     "eslint-plugin-named-unassigned-functions": "0.0.3",
     "eslint-plugin-prettier": "^3.1.4",
-    "json-stable-stringify": "latest",
     "mocha": "^8.0.1",
     "nyc": "^15.1.0",
     "prettier": "^2.0.5",
