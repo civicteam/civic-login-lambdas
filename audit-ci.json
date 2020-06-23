@@ -2,6 +2,6 @@
   "low": true,
   "package-manager": "auto",
   "report": true,
-  "advisories": [658],
+  "advisories": [658, 1505, 1500, 1488, 1325, 1324, 1316, 1300, 1179, 1164, 1066, 1065, 813, 788, 755, 658],
   "whitelist": []
 }
