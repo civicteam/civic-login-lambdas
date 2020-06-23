@@ -21,7 +21,7 @@
     "json-stable-stringify": "latest",
     "jsrsasign": "latest",
     "jwt-js": "latest",
-    "lodash": "^4.17.11",
+    "lodash": "^4.17.13",
     "unix-timestamp": "latest",
     "uuid": "^8.1.0"
   },
